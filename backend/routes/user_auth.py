@@ -8,13 +8,15 @@ from database.user_auth import (
 )
 from utils.security import hash_password, verify_password
 from db import db
+import uuid
 import random
 
 router = APIRouter()
 
+
 @router.post("/signup")
 async def signup(data: SignupRequest):
-    # check existing
+
     existing = await db.users.find_one({
         "$or": [
             {"email": data.email},
@@ -22,18 +24,27 @@ async def signup(data: SignupRequest):
         ]
     })
 
-    if not existing:
-        user = {
-            "name": data.name,
-            "phone": data.phone,
-            "email": data.email,
-            "password": hash_password(data.password),
-            "profile_completed": False
-        }
-        result = await db.users.insert_one(user)
-        return {"user_id": str(result.inserted_id)}
-    
-    raise HTTPException(status_code=400, detail="User already exists")
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    user_id = str(uuid.uuid4())  
+
+    user = {
+        "_id": user_id,   
+        "name": data.name,
+        "phone": data.phone,
+        "email": data.email,
+        "password": hash_password(data.password),
+        "profile_completed": False
+    }
+
+    await db.users.insert_one(user)
+
+    return {
+        "msg": "signup successful",
+        "user_id": user_id   
+    }
+
 
 
 @router.post("/signin")
@@ -54,7 +65,7 @@ async def signin(data: SigninRequest):
 
     return {
         "msg": "login success",
-        "user_id": str(user["_id"])
+        "user_id": user["_id"]   
     }
 
 @router.post("/forgot-password")
@@ -73,7 +84,7 @@ async def forgot_password(data: ForgotPasswordRequest):
         upsert=True
     )
 
-    return {"msg": "OTP sent", "otp": otp}   # ⚠️ remove in production
+    return {"msg": "OTP sent", "otp": otp}
 
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordRequest):
@@ -90,15 +101,15 @@ async def reset_password(data: ResetPasswordRequest):
 
     return {"msg": "Password updated"}
 
+
 @router.post("/profile/{user_id}")
 async def update_profile(user_id: str, data: ProfileUpdateRequest):
 
-    # check empty fields
     if not all([data.name, data.phone, data.email, data.address]):
         raise HTTPException(status_code=400, detail="All fields required")
 
-    await db.users.update_one(
-        {"_id": user_id},
+    result = await db.users.update_one(
+        {"_id": user_id},  
         {
             "$set": {
                 "name": data.name,
@@ -109,5 +120,8 @@ async def update_profile(user_id: str, data: ProfileUpdateRequest):
             }
         }
     )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
 
     return {"msg": "profile updated"}

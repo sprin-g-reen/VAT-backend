@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional,Dict, Any
-from pydantic import Field
+from typing import Optional,Dict, Any,List
+from pydantic import Field,BaseModel
 from .base import AppBaseModel, PyObjectId
 from .product import ProductOut
 
@@ -46,6 +46,11 @@ class WishlistCreate(AppBaseModel):
     user_id: PyObjectId
     product_id: PyObjectId
     product_variant: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AddToWishlistBulkRequest(BaseModel):
+    user_id: str
+    product_ids: List[str]
 
 class WishlistOut(AppBaseModel):
     """

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Optional,Dict,Any
-from pydantic import Field
+from pydantic import Field,BaseModel
 from .base import AppBaseModel, PyObjectId
 
 
@@ -91,6 +91,13 @@ class CartOut(AppBaseModel):
     id: Optional[PyObjectId] = Field(default=None, alias="_id")
     user_id: PyObjectId
     items: List[CartItemEmbedded] = Field(default_factory=list)
+
+
+
+
+class AddToCartBulkRequest(BaseModel):
+    user_id: str
+    product_ids: List[str]
 
 
 class AddToCartRequest(AppBaseModel):

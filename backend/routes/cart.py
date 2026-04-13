@@ -1,14 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from bson import ObjectId
 from db import db
+from database.cart import AddToCartBulkRequest
 
-router = APIRouter()
+router = APIRouter(prefix="/cart", tags=["cart"])
 
 async def calculate_summary(cart):
 
     subtotal = sum(item["price"] * item["quantity"] for item in cart["items"])
 
-    discount = 0
+    discount = 0 
 
     if cart.get("coupon"):
         coupon = cart["coupon"]
@@ -30,54 +30,68 @@ async def calculate_summary(cart):
     }
 
 
-@router.post("/add")
-async def add_to_cart(user_id: str, product_id: str, quantity: int = 1):
+@router.post("/bulk-add")
+async def bulk_add_to_cart(data: AddToCartBulkRequest):
 
-    if quantity < 1:
-        raise HTTPException(status_code=400, detail="Invalid quantity")
+    user_id = data.user_id
+    product_ids = data.product_ids
 
-    product = await db.products.find_one({"_id": ObjectId(product_id)})
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="No products provided")
 
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+    # 🔥 Fetch all products in one query
+    products = await db.products.find({
+        "product_id": {"$in": product_ids}
+    }).to_list(length=len(product_ids))
 
-    item = {
-        "product_id": ObjectId(product_id),
-        "product_name": product.get("product_name"),
-        "price": product.get("price", 0),
-        "quantity": quantity
-    }
+    if not products:
+        raise HTTPException(status_code=404, detail="No valid products found")
 
-    cart = await db.carts.find_one({"user_id": user_id})  
+    cart = await db.carts.find_one({"user_id": user_id})
 
     if not cart:
+        # 🔥 create new cart
+        items = [
+            {
+                "product_id": p["product_id"],
+                "product_name": p.get("product_name"),
+                "price": p.get("price", 0),
+                "quantity": 1
+            }
+            for p in products
+        ]
+
         await db.carts.insert_one({
             "user_id": user_id,
-            "items": [item],
+            "items": items,
             "coupon": None
         })
-        return {"msg": "cart created + item added"}
 
-    result = await db.carts.update_one(
-        {
-            "user_id": user_id,
-            "items.product_id": ObjectId(product_id)
-        },
-        {
-            "$inc": {"items.$.quantity": quantity}
-        }
-    )
+        return {"msg": "cart created with items"}
 
-    if result.matched_count > 0:
-        return {"msg": "quantity updated"}
+    # 🔥 EXISTING CART → MERGE LOGIC (BEST APPROACH)
+    existing_items = {item["product_id"]: item for item in cart["items"]}
 
+    for p in products:
+        pid = p["product_id"]
+
+        if pid in existing_items:
+            existing_items[pid]["quantity"] += 1
+        else:
+            existing_items[pid] = {
+                "product_id": pid,
+                "product_name": p.get("product_name"),
+                "price": p.get("price", 0),
+                "quantity": 1
+            }
+
+    # 🔥 SINGLE UPDATE (VERY FAST)
     await db.carts.update_one(
         {"user_id": user_id},
-        {"$push": {"items": item}}
+        {"$set": {"items": list(existing_items.values())}}
     )
 
-    return {"msg": "item added"}
-
+    return {"msg": "bulk items added to cart"}
 
 @router.get("/{user_id}")
 async def get_cart(user_id: str):
@@ -104,7 +118,7 @@ async def update_quantity(user_id: str, product_id: str, quantity: int):
     result = await db.carts.update_one(
         {
             "user_id": user_id,
-            "items.product_id": ObjectId(product_id)
+            "items.product_id": product_id
         },
         {
             "$set": {"items.$.quantity": quantity}
@@ -122,7 +136,7 @@ async def remove_item(user_id: str, product_id: str):
 
     await db.carts.update_one(
         {"user_id": user_id},
-        {"$pull": {"items": {"product_id": ObjectId(product_id)}}}
+        {"$pull": {"items": {"product_id":product_id}}}
     )
 
     return {"msg": "item removed"}

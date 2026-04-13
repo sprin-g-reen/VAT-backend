@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from database.user_auth import (
+from database.user_auth import ( 
     SignupRequest,
     SigninRequest,
     ForgotPasswordRequest,
@@ -7,11 +7,12 @@ from database.user_auth import (
     ProfileUpdateRequest
 )
 from utils.security import hash_password, verify_password
+from services.user_id_generator import generate_user_id
 from db import db
 import uuid
 import random
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup")
@@ -23,27 +24,27 @@ async def signup(data: SignupRequest):
             {"phone": data.phone}
         ]
     })
+    user_id = await generate_user_id(db)
 
-    if existing:
-        raise HTTPException(status_code=400, detail="User already exists")
+    if not existing:
+        
+        user = {
+            "_id": user_id,   
+            "name": data.name,
+            "phone": data.phone,
+            "email": data.email,
+            "password": hash_password(data.password),
+            "profile_completed": False
+        }
 
-    user_id = str(uuid.uuid4())  
+        await db.users.insert_one(user)
 
-    user = {
-        "_id": user_id,   
-        "name": data.name,
-        "phone": data.phone,
-        "email": data.email,
-        "password": hash_password(data.password),
-        "profile_completed": False
-    }
+        return {
+            "msg": "signup successful",
+            "user_id": user_id   
+        }
+    raise HTTPException(status_code=400, detail="User already exists")
 
-    await db.users.insert_one(user)
-
-    return {
-        "msg": "signup successful",
-        "user_id": user_id   
-    }
 
 
 

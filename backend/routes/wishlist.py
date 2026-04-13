@@ -1,46 +1,54 @@
 from fastapi import APIRouter, HTTPException
-from bson import ObjectId
 from db import db
+from database.wishlist import AddToWishlistBulkRequest
 
-router = APIRouter()
+router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 
-@router.post("/add")
-async def add_to_wishlist(user_id: str, product_id: str):
+@router.post("/bulk-add")
+async def bulk_add_to_wishlist(data: AddToWishlistBulkRequest):
 
-    product = await db.products.find_one({"_id": ObjectId(product_id)})
+    user_id = data.user_id
+    product_ids = data.product_ids
 
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="No products provided")
 
-    item = {
-        "product_id": ObjectId(product_id),
-        "product_name": product.get("product_name"),
-        "price": product.get("price", 0)
-    }
+    # Fetch all products at once
+    products = await db.products.find({
+    "product_id": {"$in": product_ids}
+}).to_list(length=len(product_ids))
+
+    if not products:
+        raise HTTPException(status_code=404, detail="No valid products found")
+
+    items = [
+        {
+            "product_id": p["product_id"],
+            "product_name": p.get("product_name"),
+            "price": p.get("price", 0)
+        }
+        for p in products
+    ]
 
     wishlist = await db.wishlist.find_one({"user_id": user_id})
 
     if not wishlist:
         await db.wishlist.insert_one({
             "user_id": user_id,
-            "items": [item]
+            "items": items
         })
-        return {"msg": "wishlist created + item added"}
+        return {"msg": "wishlist created with items"}
 
-    exists = await db.wishlist.find_one({
-        "user_id": user_id,
-        "items.product_id": ObjectId(product_id)
-    })
-
-    if exists:
-        return {"msg": "already in wishlist"}
-
+    # Avoid duplicates using $addToSet
     await db.wishlist.update_one(
         {"user_id": user_id},
-        {"$push": {"items": item}}
+        {
+            "$addToSet": {
+                "items": {"$each": items}
+            }
+        }
     )
-
-    return {"msg": "added to wishlist"}
+    return {"msg": "bulk items added"}
 
 
 @router.get("/{user_id}")
@@ -63,7 +71,7 @@ async def remove_item(user_id: str, product_id: str):
 
     await db.wishlist.update_one(
         {"user_id": user_id},
-        {"$pull": {"items": {"product_id": ObjectId(product_id)}}}
+        {"$pull": {"items": {"product_id": product_id}}}
     )
 
     return {"msg": "item removed"}
@@ -121,7 +129,7 @@ async def move_to_cart(user_id: str, product_id: str):
         )
     await db.wishlist.update_one(
         {"user_id": user_id},
-        {"$pull": {"items": {"product_id": ObjectId(product_id)}}}
+        {"$pull": {"items": {"product_id": product_id}}}
     )
 
     return {"msg": "moved to cart"}

@@ -9,12 +9,13 @@ from database.user_auth import (
 from utils.security import hash_password, verify_password
 from services.user_id_generator import generate_user_id
 from db import db
-import uuid
+from datetime import datetime, timedelta
 import random
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+# ✅ SIGNUP
 @router.post("/signup")
 async def signup(data: SignupRequest):
 
@@ -24,30 +25,34 @@ async def signup(data: SignupRequest):
             {"phone": data.phone}
         ]
     })
+
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+
     user_id = await generate_user_id(db)
 
-    if not existing:
-        
-        user = {
-            "_id": user_id,   
-            "name": data.name,
-            "phone": data.phone,
-            "email": data.email,
-            "password": hash_password(data.password),
-            "profile_completed": False
-        }
+    user = {
+        "_id": user_id,
+        "name": data.name,
+        "phone": data.phone,
+        "email": data.email,
+        "password": hash_password(data.password),
+        "profile_completed": False
+    }
 
+    try:
         await db.users.insert_one(user)
+    except Exception:
+        raise HTTPException(status_code=400, detail="User already exists")
 
-        return {
-            "msg": "signup successful",
-            "user_id": user_id   
-        }
-    raise HTTPException(status_code=400, detail="User already exists")
+    return {
+        "msg": "signup successful",
+        "user_id": user_id
+    }
+    print("signup successful")
 
 
-
-
+# ✅ SIGNIN
 @router.post("/signin")
 async def signin(data: SigninRequest):
 
@@ -66,9 +71,11 @@ async def signin(data: SigninRequest):
 
     return {
         "msg": "login success",
-        "user_id": user["_id"]   
+        "user_id": user["_id"]
     }
 
+
+# ✅ FORGOT PASSWORD
 @router.post("/forgot-password")
 async def forgot_password(data: ForgotPasswordRequest):
 
@@ -81,12 +88,20 @@ async def forgot_password(data: ForgotPasswordRequest):
 
     await db.otp.update_one(
         {"email": data.email},
-        {"$set": {"otp": otp}},
+        {
+            "$set": {
+                "otp": otp,
+                "created_at": datetime.utcnow()
+            }
+        },
         upsert=True
     )
 
+    # ⚠️ Do NOT return OTP in production
     return {"msg": "OTP sent", "otp": otp}
 
+
+# ✅ RESET PASSWORD
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordRequest):
 
@@ -94,6 +109,10 @@ async def reset_password(data: ResetPasswordRequest):
 
     if not record or record["otp"] != data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
+
+    # 🔥 OTP expiry check (5 min)
+    if datetime.utcnow() - record["created_at"] > timedelta(minutes=5):
+        raise HTTPException(status_code=400, detail="OTP expired")
 
     await db.users.update_one(
         {"email": data.email},
@@ -103,6 +122,7 @@ async def reset_password(data: ResetPasswordRequest):
     return {"msg": "Password updated"}
 
 
+# ✅ PROFILE UPDATE
 @router.post("/profile/{user_id}")
 async def update_profile(user_id: str, data: ProfileUpdateRequest):
 
@@ -110,7 +130,7 @@ async def update_profile(user_id: str, data: ProfileUpdateRequest):
         raise HTTPException(status_code=400, detail="All fields required")
 
     result = await db.users.update_one(
-        {"_id": user_id},  
+        {"_id": user_id},
         {
             "$set": {
                 "name": data.name,

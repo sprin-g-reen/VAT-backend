@@ -24,13 +24,10 @@ async def create_indexes():
     await db.users.create_index("email", unique=True, sparse=True)
     await db.users.create_index("phone", unique=True, sparse=True)
 
-    # COUNTERS
-    await db.counters.create_index("_id", unique=True)
-
     # CART
-    await db.cart.create_index("user_id")
-    await db.cart.create_index("items.product_id")
+    await db.carts.create_index("user_id", unique=True)
+    await db.carts.create_index("items.product_id")
 
     # WISHLIST
-    await db.wishlist.create_index("user_id")
+    await db.wishlist.create_index("user_id", unique=True)
     await db.wishlist.create_index("items.product_id")

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
-from database.user_auth import ( 
+from database.user import (
     SignupRequest,
     SigninRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     ProfileUpdateRequest
 )
+from database.base import SuccessResponse
 from utils.security import (
     hash_password,
     verify_password,
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 # ✅ SIGNUP
-@router.post("/signup")
+@router.post("/signup", response_model=SuccessResponse[dict])
 async def signup(data: SignupRequest):
 
     existing = await db.users.find_one({
@@ -50,15 +51,14 @@ async def signup(data: SignupRequest):
     except Exception:
         raise HTTPException(status_code=400, detail="User already exists")
 
-    return {
-        "msg": "signup successful",
-        "user_id": user_id
-    }
-    print("signup successful")
+    return SuccessResponse(
+        message="signup successful",
+        data={"user_id": user_id}
+    )
 
 
 # ✅ SIGNIN
-@router.post("/signin")
+@router.post("/signin", response_model=SuccessResponse[dict])
 async def signin(data: SigninRequest):
 
     user = await db.users.find_one({
@@ -74,23 +74,25 @@ async def signin(data: SigninRequest):
 
     access_token = create_access_token(data={"sub": user["_id"]})
 
-    return {
-        "msg": "login success",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user_id": user["_id"]
-    }
+    return SuccessResponse(
+        message="login success",
+        data={
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user_id": user["_id"]
+        }
+    )
 
 
 # ✅ FORGOT PASSWORD
-@router.post("/forgot-password")
+@router.post("/forgot-password", response_model=SuccessResponse[dict])
 async def forgot_password(data: ForgotPasswordRequest):
 
     user = await db.users.find_one({"email": data.email})
 
     # Security: Generic response even if user not found to prevent enumeration
     if not user:
-        return {"msg": "If an account exists with this email, an OTP has been sent."}
+        return SuccessResponse(message="If an account exists with this email, an OTP has been sent.")
 
     otp = str(random.randint(100000, 999999))
 
@@ -107,11 +109,11 @@ async def forgot_password(data: ForgotPasswordRequest):
 
     # Security: Log OTP instead of returning it
     print(f"DEBUG: OTP for {data.email} is {otp}")
-    return {"msg": "If an account exists with this email, an OTP has been sent."}
+    return SuccessResponse(message="If an account exists with this email, an OTP has been sent.")
 
 
 # ✅ RESET PASSWORD
-@router.post("/reset-password")
+@router.post("/reset-password", response_model=SuccessResponse[dict])
 async def reset_password(data: ResetPasswordRequest):
 
     record = await db.otp.find_one({"email": data.email})
@@ -128,11 +130,11 @@ async def reset_password(data: ResetPasswordRequest):
         {"$set": {"password": hash_password(data.new_password)}}
     )
 
-    return {"msg": "Password updated"}
+    return SuccessResponse(message="Password updated")
 
 
 # ✅ PROFILE UPDATE
-@router.post("/profile/{user_id}")
+@router.post("/profile/{user_id}", response_model=SuccessResponse[dict])
 async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_id: str = Depends(get_current_user)):
 
     # Authorization: Ensure user is updating their own profile
@@ -158,4 +160,4 @@ async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {"msg": "profile updated"}
+    return SuccessResponse(message="profile updated")

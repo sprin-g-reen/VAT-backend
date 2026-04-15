@@ -10,20 +10,14 @@ router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 
 @router.post("/bulk-add", response_model=SuccessResponse[dict])
 async def bulk_add_to_wishlist(data: AddToWishlistBulkRequest, current_user_id: str = Depends(get_current_user)):
-    if data.user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    msg = await bulk_add_wishlist(data.user_id, data.product_ids)
+    msg = await bulk_add_wishlist(current_user_id, data.product_ids)
     log_api_response("/wishlist/bulk-add", 200, msg)
     return SuccessResponse(message=msg)
 
 
-@router.get("/{user_id}", response_model=SuccessResponse[dict])
-async def get_wishlist(user_id: str, current_user_id: str = Depends(get_current_user)):
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    wishlist = await db.wishlist.find_one({"user_id": user_id})
+@router.get("/", response_model=SuccessResponse[dict])
+async def get_wishlist(current_user_id: str = Depends(get_current_user)):
+    wishlist = await db.wishlist.find_one({"user_id": current_user_id})
 
     if not wishlist:
         return SuccessResponse(data={"items": []})
@@ -35,36 +29,27 @@ async def get_wishlist(user_id: str, current_user_id: str = Depends(get_current_
     return SuccessResponse(data=wishlist)
 
 
-@router.delete("/remove", response_model=SuccessResponse[dict])
-async def remove_item(user_id: str, product_id: str, current_user_id: str = Depends(get_current_user)):
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
+@router.delete("/remove/{product_id}", response_model=SuccessResponse[dict])
+async def remove_item(product_id: str, current_user_id: str = Depends(get_current_user)):
     await db.wishlist.update_one(
-        {"user_id": user_id},
+        {"user_id": current_user_id},
         {"$pull": {"items": {"product_id": product_id}}}
     )
 
     return SuccessResponse(message="item removed")
 
 
-@router.delete("/clear/{user_id}", response_model=SuccessResponse[dict])
-async def clear_wishlist(user_id: str, current_user_id: str = Depends(get_current_user)):
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
+@router.delete("/clear", response_model=SuccessResponse[dict])
+async def clear_wishlist(current_user_id: str = Depends(get_current_user)):
     await db.wishlist.update_one(
-        {"user_id": user_id},
+        {"user_id": current_user_id},
         {"$set": {"items": []}}
     )
 
     return SuccessResponse(message="wishlist cleared")
 
 
-@router.post("/move-to-cart", response_model=SuccessResponse[dict])
-async def move_to_cart(user_id: str, product_id: str, current_user_id: str = Depends(get_current_user)):
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-
-    msg = await move_item_to_cart(user_id, product_id)
+@router.post("/move-to-cart/{product_id}", response_model=SuccessResponse[dict])
+async def move_to_cart(product_id: str, current_user_id: str = Depends(get_current_user)):
+    msg = await move_item_to_cart(current_user_id, product_id)
     return SuccessResponse(message=msg)

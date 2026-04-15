@@ -10,8 +10,11 @@ router = APIRouter(prefix="/cart", tags=["cart"])
 
 
 @router.post("/bulk-add", response_model=SuccessResponse[dict])
-async def bulk_add_to_cart(data: AddToCartBulkRequest, current_user_id: str = Depends(get_current_user)):
-    # ✅ use user_id from token for security
+async def bulk_add_to_cart(
+    data: AddToCartBulkRequest,
+    current_user_id: str = Depends(get_current_user)
+):
+    # ✅ use user_id from token
     msg = await bulk_add_items(current_user_id, data.product_ids)
     log_api_response("/cart/bulk-add", 200, msg)
     return SuccessResponse(message=msg)
@@ -25,14 +28,18 @@ async def get_cart(current_user_id: str = Depends(get_current_user)):
         return SuccessResponse(data={"items": []})
 
     cart["_id"] = str(cart["_id"])
-    for item in cart["items"]:
+    for item in cart.get("items", []):
         item["product_id"] = str(item["product_id"])
 
     return SuccessResponse(data=cart)
 
 
 @router.put("/update/{product_id}", response_model=SuccessResponse[dict])
-async def update_quantity(product_id: str, quantity: int, current_user_id: str = Depends(get_current_user)):
+async def update_quantity(
+    product_id: str,
+    quantity: int,
+    current_user_id: str = Depends(get_current_user)
+):
     if quantity == 0:
         await db.carts.update_one(
             {"user_id": current_user_id},

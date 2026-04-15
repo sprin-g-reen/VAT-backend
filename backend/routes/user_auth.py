@@ -17,6 +17,7 @@ from services.user_id_generator import generate_user_id
 from db import db
 from datetime import datetime, timedelta
 import random
+from utils.logging import log_api_response
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -51,6 +52,7 @@ async def signup(data: SignupRequest):
     except Exception:
         raise HTTPException(status_code=400, detail="User already exists")
 
+    log_api_response("/auth/signup", 200, "signup successful")
     return SuccessResponse(
         message="signup successful",
         data={"user_id": user_id}
@@ -74,6 +76,7 @@ async def signin(data: SigninRequest):
 
     access_token = create_access_token(data={"sub": user["_id"]})
 
+    log_api_response("/auth/signin", 200, "login success")
     return SuccessResponse(
         message="login success",
         data={

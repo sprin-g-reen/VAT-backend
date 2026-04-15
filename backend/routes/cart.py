@@ -3,6 +3,7 @@ from db import db
 from database.cart import AddToCartBulkRequest
 from database.base import SuccessResponse
 from utils.security import get_current_user
+from utils.logging import log_api_response
 from services.cart_service import calculate_summary, bulk_add_items, checkout_cart
 
 router = APIRouter(prefix="/cart", tags=["cart"])
@@ -14,6 +15,7 @@ async def bulk_add_to_cart(data: AddToCartBulkRequest, current_user_id: str = De
         raise HTTPException(status_code=403, detail="Not authorized")
 
     msg = await bulk_add_items(data.user_id, data.product_ids)
+    log_api_response("/cart/bulk-add", 200, msg)
     return SuccessResponse(message=msg)
 
 

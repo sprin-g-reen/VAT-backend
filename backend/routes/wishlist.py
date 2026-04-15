@@ -3,6 +3,7 @@ from db import db
 from database.wishlist import AddToWishlistBulkRequest
 from database.base import SuccessResponse
 from utils.security import get_current_user
+from utils.logging import log_api_response
 from services.wishlist_service import move_item_to_cart, bulk_add_wishlist
 
 router = APIRouter(prefix="/wishlist", tags=["wishlist"])
@@ -13,6 +14,7 @@ async def bulk_add_to_wishlist(data: AddToWishlistBulkRequest, current_user_id: 
         raise HTTPException(status_code=403, detail="Not authorized")
 
     msg = await bulk_add_wishlist(data.user_id, data.product_ids)
+    log_api_response("/wishlist/bulk-add", 200, msg)
     return SuccessResponse(message=msg)
 
 

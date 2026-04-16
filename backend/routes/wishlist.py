@@ -3,7 +3,10 @@ from db import db
 from database.wishlist import AddToWishlistBulkRequest
 from database.base import SuccessResponse
 from utils.security import get_current_user
-from services.wishlist_service import move_item_to_cart, bulk_add_wishlist
+from services.wishlist_service import (
+    move_item_to_cart as move_to_cart_service,
+    bulk_add_wishlist
+)
 
 router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 
@@ -88,28 +91,5 @@ async def move_item_to_cart(user_id: str, product_id: str, current_user_id: str 
     if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    # ✅ STEP 1: ATOMIC REMOVE
-    result = await db.wishlist.update_one(
-        {"user_id": user_id, "items.product_id": product_id},
-        {"$pull": {"items": {"product_id": product_id}}}
-    )
-
-    # 👉 if nothing removed → already moved / not present
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Item not found in wishlist")
-
-    # ✅ STEP 2: ATOMIC ADD TO CART
-    await db.carts.update_one(
-        {"user_id": user_id},
-        {
-            "$addToSet": {
-                "items": {
-                    "product_id": product_id,
-                    "quantity": 1
-                }
-            }
-        },
-        upsert=True
-    )
-
-    return SuccessResponse(message="moved to cart")
+    message = await move_to_cart_service(user_id, product_id)
+    return SuccessResponse(message=message)

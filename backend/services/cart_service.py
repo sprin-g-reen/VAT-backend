@@ -3,20 +3,37 @@ from fastapi import HTTPException
 from datetime import datetime
 
 
-# ✅ CALCULATE SUMMARY (no change needed)
-async def calculate_summary(cart):
-    subtotal = sum(item["price"] * item.get("quantity", 1) for item in cart.get("items", []))
+# ✅ CALCULATE SUMMARY (Optimized with Aggregation)
+async def calculate_summary(user_id: str):
+    pipeline = [
+        {"$match": {"_id": user_id}},
+        {"$unwind": {"path": "$items", "preserveNullAndEmptyArrays": True}},
+        {
+            "$group": {
+                "_id": "$_id",
+                "subtotal": {"$sum": {"$multiply": ["$items.price", {"$ifNull": ["$items.quantity", 1]}]}},
+                "coupon": {"$first": "$coupon"}
+            }
+        }
+    ]
+
+    result = await db.carts.aggregate(pipeline).to_list(1)
+    if not result:
+        return {"subtotal": 0, "discount": 0, "shipping": 10, "total": 10}
+
+    data = result[0]
+    subtotal = data.get("subtotal", 0)
     discount = 0
 
-    if cart.get("coupon"):
-        coupon = cart["coupon"]
+    if data.get("coupon"):
+        coupon = data["coupon"]
         if coupon.get("type") == "percent":
             discount = subtotal * (coupon.get("discount", 0) / 100)
         else:
             discount = coupon.get("discount", 0)
 
     shipping = 0 if subtotal > 100 else 10
-    total = subtotal - discount + shipping
+    total = max(0, subtotal - discount + shipping)
 
     return {
         "subtotal": round(subtotal, 2),
@@ -31,9 +48,10 @@ async def bulk_add_items(user_id: str, product_ids: list):
     if not product_ids:
         raise HTTPException(status_code=400, detail="No products provided")
 
-    # ✅ fetch valid products
+    # ✅ fetch valid products (Optimize: only fetch needed fields)
     products = await db.products.find(
-        {"_id": {"$in": product_ids}}
+        {"_id": {"$in": product_ids}},
+        {"_id": 1, "product_name": 1, "price": 1}
     ).to_list(length=len(product_ids))
 
     if not products:
@@ -113,7 +131,7 @@ async def checkout_cart(user_id: str):
     if not cart or not cart.get("items"):
         raise HTTPException(status_code=400, detail="Cart is empty")
 
-    summary = await calculate_summary(cart)
+    summary = await calculate_summary(user_id)
 
     order = {
         "_id": f"ORD{datetime.utcnow().timestamp()}",

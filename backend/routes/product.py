@@ -29,10 +29,12 @@ async def create_product(data: ProductCreate):
 @router.get("/all", response_model=SuccessResponse[List[dict]])
 async def get_all_products():
 
-    products = await db.products.find().to_list(100)
-
-    for p in products:
-        p["_id"] = str(p["_id"])
+    # Optimize: Use aggregation to stringify _id in DB
+    pipeline = [
+        {"$limit": 100},
+        {"$addFields": {"_id": {"$toString": "$_id"}}}
+    ]
+    products = await db.products.aggregate(pipeline).to_list(100)
 
     return SuccessResponse(data=products)
 

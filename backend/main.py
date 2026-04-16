@@ -1,6 +1,9 @@
-from fastapi import FastAPI
-from routes import user_auth,cart,wishlist,product
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from routes import user_auth, cart, wishlist, product
 from db import db
+from database.base import ErrorResponse
 
 app = FastAPI(
     title="Auth Service API",
@@ -17,6 +20,26 @@ app.include_router(user_auth.router)
 app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(product.router)
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(error=exc.detail).model_dump()
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content=ErrorResponse(
+            error="Validation Error",
+            detail=str(exc.errors())
+        ).model_dump()
+    )
+
 
 @app.on_event("startup")
 async def create_indexes():

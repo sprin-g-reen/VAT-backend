@@ -8,7 +8,7 @@ from services.cart_service import calculate_summary, bulk_add_items, checkout_ca
 router = APIRouter(prefix="/cart", tags=["cart"])
 
 
-@router.post("/bulk-add", response_model=SuccessResponse[dict])
+@router.post("/bulk-add", response_model=SuccessResponse[dict], status_code=201)
 async def bulk_add_to_cart(
     data: AddToCartBulkRequest,
     current_user_id: str = Depends(get_current_user)
@@ -74,7 +74,7 @@ async def remove_item(product_id: str, current_user_id: str = Depends(get_curren
     return SuccessResponse(message="item removed")
 
 
-@router.post("/checkout", response_model=SuccessResponse[dict])
+@router.post("/checkout", response_model=SuccessResponse[dict], status_code=201)
 async def checkout(current_user_id: str = Depends(get_current_user)):
 
     cart = await db.carts.find_one({"user_id": current_user_id})

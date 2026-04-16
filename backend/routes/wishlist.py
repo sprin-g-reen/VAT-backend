@@ -9,13 +9,13 @@ router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 
 
 # ✅ BULK ADD
-@router.post("/bulk-add", response_model=SuccessResponse[dict])
+@router.post("/bulk-add", response_model=SuccessResponse[dict], status_code=201)
 async def bulk_add_to_wishlist(
     data: AddToWishlistBulkRequest,
     current_user_id: str = Depends(get_current_user)
 ):
     if data.user_id != current_user_id:
-        raise HTTPException(status_code=503, detail="Not authorized")
+        raise HTTPException(status_code=403, detail="Not authorized")
 
     msg = await bulk_add_wishlist(data.user_id, data.product_ids)
     return SuccessResponse(message=msg)
@@ -82,22 +82,25 @@ async def clear_wishlist(
 
 
 # ✅ MOVE TO CART (FIXED BODY INPUT)
-@router.post("/move-to-cart", response_model=SuccessResponse[dict])
-async def move_item_to_cart(user_id: str, product_id: str):
+@router.post("/move-to-cart", response_model=SuccessResponse[dict], status_code=201)
+async def move_item_to_cart(user_id: str, product_id: str, current_user_id: str = Depends(get_current_user)):
+
+    if user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
 
     # ✅ STEP 1: ATOMIC REMOVE
     result = await db.wishlist.update_one(
-        {"_id": user_id, "items.product_id": product_id},
+        {"user_id": user_id, "items.product_id": product_id},
         {"$pull": {"items": {"product_id": product_id}}}
     )
 
     # 👉 if nothing removed → already moved / not present
     if result.modified_count == 0:
-        return "item already moved or not present"
+        raise HTTPException(status_code=404, detail="Item not found in wishlist")
 
     # ✅ STEP 2: ATOMIC ADD TO CART
     await db.carts.update_one(
-        {"_id": user_id},
+        {"user_id": user_id},
         {
             "$addToSet": {
                 "items": {
@@ -109,4 +112,4 @@ async def move_item_to_cart(user_id: str, product_id: str):
         upsert=True
     )
 
-    return "moved to cart"
+    return SuccessResponse(message="moved to cart")

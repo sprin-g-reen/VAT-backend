@@ -1,13 +1,15 @@
 from fastapi import APIRouter, HTTPException
 from database.product import ProductCreate, ProductUpdate
+from database.base import SuccessResponse
 from services.product_id_generator import generate_product_id
 from db import db
+from typing import List
 
 router = APIRouter(prefix="/product", tags=["product"])
 
 
 # ✅ CREATE PRODUCT
-@router.post("/create")
+@router.post("/create", response_model=SuccessResponse[dict], status_code=201)
 async def create_product(data: ProductCreate):
 
     product_id = await generate_product_id(db)
@@ -17,14 +19,14 @@ async def create_product(data: ProductCreate):
 
     await db.products.insert_one(product)
 
-    return {
-        "msg": "product created",
-        "_id": product_id
-    }
+    return SuccessResponse(
+        message="product created",
+        data={"_id": product_id}
+    )
 
 
 # ✅ GET ALL PRODUCTS
-@router.get("/all")
+@router.get("/all", response_model=SuccessResponse[List[dict]])
 async def get_all_products():
 
     products = await db.products.find().to_list(100)
@@ -32,11 +34,11 @@ async def get_all_products():
     for p in products:
         p["_id"] = str(p["_id"])
 
-    return products
+    return SuccessResponse(data=products)
 
 
 # ✅ GET SINGLE PRODUCT
-@router.get("/{product_id}")
+@router.get("/{product_id}", response_model=SuccessResponse[dict])
 async def get_product(product_id: str):
 
     product = await db.products.find_one({"_id": product_id})   # ✅ FIX
@@ -45,11 +47,11 @@ async def get_product(product_id: str):
         raise HTTPException(status_code=404, detail="Product not found")
 
     product["_id"] = str(product["_id"])
-    return product
+    return SuccessResponse(data=product)
 
 
 # ✅ UPDATE PRODUCT
-@router.put("/update/{product_id}")
+@router.put("/update/{product_id}", response_model=SuccessResponse[dict])
 async def update_product(product_id: str, data: ProductUpdate):
 
     update_data = {k: v for k, v in data.dict().items() if v is not None}
@@ -65,11 +67,11 @@ async def update_product(product_id: str, data: ProductUpdate):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    return {"msg": "product updated"}
+    return SuccessResponse(message="product updated")
 
 
 # ✅ DELETE PRODUCT
-@router.delete("/delete/{product_id}")
+@router.delete("/delete/{product_id}", response_model=SuccessResponse[dict])
 async def delete_product(product_id: str):
 
     result = await db.products.delete_one({"_id": product_id})   # ✅ FIX
@@ -77,4 +79,4 @@ async def delete_product(product_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    return {"msg": "product deleted"}
+    return SuccessResponse(message="product deleted")

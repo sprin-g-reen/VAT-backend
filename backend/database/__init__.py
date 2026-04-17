@@ -65,9 +65,9 @@ from .address import AddressEmbedded
 
 from .user import UserCreate, UserOut, UserUpdate
 
-from .category import CategoryCreate, CategoryOut
+from .category import CategoryCreate, CategoryOut, CategoryUpdate
 
-from .brand import BrandCreate, BrandOut
+from .subcategory import SubcategoryCreate, SubcategoryOut, SubcategoryUpdate
 
 from .product import (
     VariantEmbedded,
@@ -98,9 +98,9 @@ __all__ = [
     # user
     "UserCreate", "UserOut", "UserUpdate",
     # category
-    "CategoryCreate", "CategoryOut",
-    # brand
-    "BrandCreate", "BrandOut",
+    "CategoryCreate", "CategoryOut", "CategoryUpdate",
+    # subcategory
+    "SubcategoryCreate", "SubcategoryOut", "SubcategoryUpdate",
     # product
     "VariantEmbedded", "ProductImageEmbedded",
     "ProductCreate", "ProductOut", "ProductUpdate",

@@ -40,6 +40,13 @@ class CategoryCreate(AppBaseModel):
     category_name: str
 
 
+class CategoryUpdate(AppBaseModel):
+    """
+    CategoryUpdate Schema
+    """
+    category_name: Optional[str] = None
+
+
 class CategoryOut(AppBaseModel):
     """
     CategoryOut Schema

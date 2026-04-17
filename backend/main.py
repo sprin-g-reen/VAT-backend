@@ -1,7 +1,19 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from routes import user_auth, cart, wishlist, product
+from routes import (
+    user_auth,
+    cart,
+    wishlist,
+    product,
+    category,
+    subcategory,
+    address,
+    review,
+    purchase_intent,
+    payment,
+    order_fullfilement
+)
 from db import db
 from database.base import ErrorResponse
 
@@ -20,6 +32,13 @@ app.include_router(user_auth.router)
 app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(product.router)
+app.include_router(category.router)
+app.include_router(subcategory.router)
+app.include_router(address.router)
+app.include_router(review.router)
+app.include_router(purchase_intent.router)
+app.include_router(payment.router)
+app.include_router(order_fullfilement.router)
 
 
 @app.exception_handler(HTTPException)

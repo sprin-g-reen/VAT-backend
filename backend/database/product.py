@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import Field, field_validator
 from .base import AppBaseModel
 from .category import CategoryOut
-from .brand import BrandOut
+from .subcategory import SubcategoryOut
 
 
 class VariantEmbedded(AppBaseModel):
@@ -118,8 +118,8 @@ class ProductCreate(AppBaseModel):
     category_id : Optional[str]
         Reference to category.
 
-    brand_id : Optional[str]
-        Reference to brand.
+    subcategory_id : Optional[str]
+        Reference to subcategory.
 
     variants : List[VariantEmbedded]
         List of product variants.
@@ -144,7 +144,7 @@ class ProductCreate(AppBaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     category_id: Optional[str] = None
-    brand_id: Optional[str] = None
+    subcategory_id: Optional[str] = None
     variants: List[VariantEmbedded] = []
     images: List[ProductImageEmbedded] = []
 
@@ -179,8 +179,8 @@ class ProductOut(AppBaseModel):
     category : Optional[CategoryOut]
         Category details (populated).
 
-    brand : Optional[BrandOut]
-        Brand details (populated).
+    subcategory : Optional[SubcategoryOut]
+        Subcategory details (populated).
 
     product_is_active : bool
         Indicates if the product is active.
@@ -212,7 +212,7 @@ class ProductOut(AppBaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     category: Optional[CategoryOut] = None
-    brand: Optional[BrandOut] = None
+    subcategory: Optional[SubcategoryOut] = None
     product_is_active: bool = True
     product_created_at: datetime = Field(default_factory=datetime.utcnow)
     variants: List[VariantEmbedded] = []
@@ -245,8 +245,8 @@ class ProductUpdate(AppBaseModel):
     category_id : Optional[str]
         Updated category reference.
 
-    brand_id : Optional[str]
-        Updated brand reference.
+    subcategory_id : Optional[str]
+        Updated subcategory reference.
 
     product_is_active : Optional[bool]
         Activate or deactivate product.
@@ -267,5 +267,5 @@ class ProductUpdate(AppBaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     category_id: Optional[str] = None
-    brand_id: Optional[str] = None
+    subcategory_id: Optional[str] = None
     product_is_active: Optional[bool] = None

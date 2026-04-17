@@ -13,8 +13,8 @@ async def create_category(data: CategoryCreate, current_user_id: str = Depends(g
     return SuccessResponse(message="Category created", data={"_id": category_id})
 
 @router.get("/all", response_model=SuccessResponse[List[CategoryOut]])
-async def get_all_categories():
-    categories = await category_service.get_all_categories()
+async def get_all_categories(skip: int = 0, limit: int = 10):
+    categories = await category_service.get_all_categories(skip, limit)
     return SuccessResponse(data=categories)
 
 @router.get("/{category_id}", response_model=SuccessResponse[CategoryOut])

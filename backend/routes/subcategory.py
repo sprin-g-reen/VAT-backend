@@ -13,8 +13,8 @@ async def create_subcategory(data: SubcategoryCreate, current_user_id: str = Dep
     return SuccessResponse(message="Subcategory created", data={"_id": subcategory_id})
 
 @router.get("/all", response_model=SuccessResponse[List[SubcategoryOut]])
-async def get_all_subcategories():
-    subcategories = await subcategory_service.get_all_subcategories()
+async def get_all_subcategories(skip: int = 0, limit: int = 10):
+    subcategories = await subcategory_service.get_all_subcategories(skip, limit)
     return SuccessResponse(data=subcategories)
 
 @router.get("/{subcategory_id}", response_model=SuccessResponse[SubcategoryOut])

@@ -30,7 +30,7 @@ async def get_wishlist(
     if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    wishlist = await db.wishlist.find_one({"user_id": user_id})
+    wishlist = await db.wishlist.find_one({"_id": user_id})
 
     if not wishlist:
         return SuccessResponse(data={"items": []})
@@ -54,7 +54,7 @@ async def remove_item(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     result = await db.wishlist.update_one(
-        {"user_id": user_id},
+        {"_id": user_id},
         {"$pull": {"items": {"product_id": product_id}}}
     )
 
@@ -74,7 +74,7 @@ async def clear_wishlist(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     await db.wishlist.update_one(
-        {"user_id": user_id},
+        {"_id": user_id},
         {"$set": {"items": []}}
     )
 
@@ -90,7 +90,7 @@ async def move_item_to_cart(user_id: str, product_id: str, current_user_id: str 
 
     # ✅ STEP 1: ATOMIC REMOVE
     result = await db.wishlist.update_one(
-        {"user_id": user_id, "items.product_id": product_id},
+        {"_id": user_id, "items.product_id": product_id},
         {"$pull": {"items": {"product_id": product_id}}}
     )
 
@@ -100,7 +100,7 @@ async def move_item_to_cart(user_id: str, product_id: str, current_user_id: str 
 
     # ✅ STEP 2: ATOMIC ADD TO CART
     await db.carts.update_one(
-        {"user_id": user_id},
+        {"_id": user_id},
         {
             "$addToSet": {
                 "items": {

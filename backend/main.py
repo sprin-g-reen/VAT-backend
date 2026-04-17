@@ -68,9 +68,34 @@ async def create_indexes():
     await db.users.create_index("phone", unique=True, sparse=True)
 
     # CART
-    await db.carts.create_index("user_id", unique=True)
     await db.carts.create_index("items.product_id")
 
     # WISHLIST
-    await db.wishlist.create_index("user_id", unique=True)
     await db.wishlist.create_index("items.product_id")
+
+    # OTP (with TTL of 5 minutes)
+    await db.otp.create_index("email", unique=True)
+    await db.otp.create_index("created_at", expireAfterSeconds=300)
+
+    # PRODUCTS
+    await db.products.create_index("category_id")
+    await db.products.create_index("subcategory_id")
+    await db.products.create_index("product_name")
+
+    # SUBCATEGORIES
+    await db.subcategories.create_index("category_id")
+
+    # REVIEWS
+    await db.reviews.create_index("product_id")
+    await db.reviews.create_index("user_id")
+
+    # ORDERS
+    await db.orders.create_index("user_id")
+    await db.orders.create_index("status")
+
+    # PAYMENTS
+    await db.payments.create_index("order_id")
+
+    # RETURNS
+    await db.returns.create_index("order_id")
+    await db.returns.create_index("user_id")

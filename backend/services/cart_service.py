@@ -66,9 +66,10 @@ async def bulk_add_items(user_id: str, product_ids: list):
     if not product_ids:
         raise HTTPException(status_code=400, detail="No products provided")
 
-    # ✅ fetch valid products
+    # ✅ fetch valid products (only required fields)
     products = await db.products.find(
-        {"_id": {"$in": product_ids}}
+        {"_id": {"$in": product_ids}},
+        {"product_name": 1, "price": 1}
     ).to_list(length=len(product_ids))
 
     if not products:
@@ -87,7 +88,7 @@ async def bulk_add_items(user_id: str, product_ids: list):
 
     # 🔥 ATOMIC UPSERT (no find_one)
     await db.carts.update_one(
-        {"_id": user_id},   # ✅ FIX (no user_id field)
+        {"_id": user_id},
         {
             "$addToSet": {
                 "items": {"$each": items}
@@ -200,8 +201,11 @@ async def checkout_cart(user_id: str):
 
     cart_data = result[0]
 
+    from services.id_generator import generate_order_id
+    order_id = await generate_order_id(db)
+
     order = {
-        "_id": f"ORD{datetime.utcnow().timestamp()}",
+        "_id": order_id,
         "user_id": user_id,
         "items": cart_data["items"],
         "total_amount": cart_data["total"],

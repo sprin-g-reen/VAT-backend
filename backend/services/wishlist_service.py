@@ -56,9 +56,10 @@ async def bulk_add_wishlist(user_id: str, product_ids: list):
     if not product_ids:
         raise HTTPException(status_code=400, detail="No products provided")
 
-    # 🔥 fetch valid products using _id
+    # 🔥 fetch valid products using _id (only required fields)
     products = await db.products.find(
-        {"_id": {"$in": product_ids}}
+        {"_id": {"$in": product_ids}},
+        {"product_name": 1, "price": 1}
     ).to_list(length=len(product_ids))
 
     if not products:

@@ -8,8 +8,11 @@ async def add_address(user_id: str, address: AddressEmbedded):
         {"$push": {"addresses": address.model_dump()}}
     )
 
-async def get_addresses(user_id: str):
-    user = await db.users.find_one({"_id": user_id}, {"addresses": 1})
+async def get_addresses(user_id: str, skip: int = 0, limit: int = 10):
+    user = await db.users.find_one(
+        {"_id": user_id},
+        {"addresses": {"$slice": [skip, limit]}}
+    )
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user.get("addresses", [])

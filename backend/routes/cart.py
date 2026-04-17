@@ -32,7 +32,7 @@ async def get_cart(current_user_id: str = Depends(get_current_user)):
 @router.put("/update/{product_id}", response_model=SuccessResponse[dict])
 async def update_quantity(
     product_id: str,
-    quantity: int,
+    quantity: int = 1,
     current_user_id: str = Depends(get_current_user)
 ):
 
@@ -75,11 +75,6 @@ async def remove_item(product_id: str, current_user_id: str = Depends(get_curren
 
 @router.post("/checkout", response_model=SuccessResponse[dict], status_code=201)
 async def checkout(current_user_id: str = Depends(get_current_user)):
-
-    cart = await db.carts.find_one({"_id": current_user_id})
-
-    if not cart or not cart.get("items"):
-        raise HTTPException(status_code=400, detail="Cart is empty")
 
     order_id = await checkout_cart(current_user_id)
     return SuccessResponse(data={"order_id": order_id})

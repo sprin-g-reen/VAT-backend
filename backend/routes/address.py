@@ -13,8 +13,8 @@ async def add_address(address: AddressEmbedded, current_user_id: str = Depends(g
     return SuccessResponse(message="Address added")
 
 @router.get("/all", response_model=SuccessResponse[List[AddressEmbedded]])
-async def get_addresses(current_user_id: str = Depends(get_current_user)):
-    addresses = await address_service.get_addresses(current_user_id)
+async def get_addresses(current_user_id: str = Depends(get_current_user), skip: int = 0, limit: int = 10):
+    addresses = await address_service.get_addresses(current_user_id, skip, limit)
     return SuccessResponse(data=addresses)
 
 @router.put("/update/{index}", response_model=SuccessResponse[dict])

@@ -119,6 +119,66 @@ class EcommerceUser(HttpUser):
             headers=self.headers
         )
 
+    # -------------------------
+    # 📁 CATEGORIES & SUBCATEGORIES
+    # -------------------------
+    @task(2)
+    def get_categories(self):
+        self.client.get("/category/all")
+
+    @task(2)
+    def get_subcategories(self):
+        self.client.get("/subcategory/all")
+
+    # -------------------------
+    # 📍 ADDRESSES
+    # -------------------------
+    @task(2)
+    def manage_addresses(self):
+        # Add address
+        address_payload = {
+            "street": f"{random.randint(1,999)} Main St",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "country": "India",
+            "zipcode": "600001"
+        }
+        res = self.client.post("/address/add", json=address_payload, headers=self.headers)
+
+        if res.status_code == 201:
+            # Get all addresses
+            res_all = self.client.get("/address/all", headers=self.headers)
+            if res_all.status_code == 200:
+                addresses = res_all.json().get("data", [])
+                if addresses:
+                    # Update last address
+                    idx = len(addresses) - 1
+                    self.client.put(f"/address/update/{idx}", json=address_payload, headers=self.headers)
+                    # Delete last address
+                    self.client.delete(f"/address/delete/{idx}", headers=self.headers)
+
+    # -------------------------
+    # ⭐ REVIEWS
+    # -------------------------
+    @task(2)
+    def manage_reviews(self):
+        pid = random.choice(self.products)
+        review_payload = {
+            "product_id": pid,
+            "rating": random.randint(1, 5),
+            "comment": "Nice product!",
+            "verified_purchase": True
+        }
+        res = self.client.post("/review/create", json=review_payload, headers=self.headers)
+
+        if res.status_code == 201:
+            rid = res.json().get("data", {}).get("_id")
+            # Get product reviews
+            self.client.get(f"/review/product/{pid}")
+            if rid:
+                # Delete review
+                self.client.delete(f"/review/delete/{rid}", headers=self.headers)
+
 
 from locust import HttpUser, task, between
 import random
@@ -137,8 +197,8 @@ class ProductUser(HttpUser):
             "product_name": f"coffee_{random.randint(1,10000)}",
             "description": "test product",
             "price": random.randint(100, 500),
-            "category_id": "001",
-            "brand_id": "001"
+            "category_id": "CAT000001",
+            "subcategory_id": "SUB000001"
         }
 
         res = self.client.post("/product/create", json=payload)

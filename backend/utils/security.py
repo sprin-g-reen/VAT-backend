@@ -58,8 +58,19 @@ def verify_access_token(token: str):
     return verify_token(token, "access")
 
 
+from db import db
+
 async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security)):
     payload = verify_access_token(auth.credentials)
+
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return payload.get("sub")
+
+    user_id = payload.get("sub")
+
+    user = await db.users.find_one({"_id": user_id})  # ✅ STRING ID
+
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+
+    return user

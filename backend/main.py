@@ -7,13 +7,9 @@ from routes import (
     wishlist,
     product,
     category,
-    subcategory,
-    address,
-    review,
-    purchase_intent,
-    payment,
-    order_fullfilement
 )
+from admin_routes import (
+    admin_auth,admin_product,admin_category,admin_roles,admin_create)
 from db import db
 from database.base import ErrorResponse
 
@@ -33,12 +29,12 @@ app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(product.router)
 app.include_router(category.router)
-app.include_router(subcategory.router)
-app.include_router(address.router)
-app.include_router(review.router)
-app.include_router(purchase_intent.router)
-app.include_router(payment.router)
-app.include_router(order_fullfilement.router)
+app.include_router(admin_auth.router)
+app.include_router(admin_product.router)
+app.include_router(admin_category.router)
+app.include_router(admin_roles.router)
+app.include_router(admin_create.router)
+
 
 
 @app.exception_handler(HTTPException)
@@ -102,3 +98,6 @@ async def create_indexes():
     # RETURNS
     await db.returns.create_index("order_id")
     await db.returns.create_index("user_id")
+
+    await db.categories.create_index("is_active")
+    await db.categories.create_index("name")

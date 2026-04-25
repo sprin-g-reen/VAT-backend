@@ -71,7 +71,19 @@ async def get_all_products(
 ):
     limit = min(limit, 100)
 
-    products = await db.products.find().skip(skip).limit(limit).to_list(limit)
+    # Optimize: Added projection to avoid sending large fields (like description or image arrays) in list view if not needed
+    # Assuming list view only needs a subset of fields
+    projection = {
+        "product_name": 1,
+        "category_id": 1,
+        "subcategory_id": 1,
+        "price": 1,
+        "stock_quantity": 1,
+        "product_is_active": 1,
+        "_id": 1
+    }
+
+    products = await db.products.find({}, projection).skip(skip).limit(limit).to_list(limit)
 
     return SuccessResponse(data=products)
 

@@ -3,19 +3,30 @@ from utils.security import get_current_user
 from db import db
 
 
+# In-memory cache for role permissions to minimize DB hits
+ROLE_PERMISSIONS_CACHE = {}
+
 async def get_permissions(user):
+    user_roles = user.get("roles", [])
+    if not user_roles:
+        return set()
+
     permissions = set()
 
-    for role in user.get("roles", []):
-        role_data = await db.roles.find_one({"name": role})
+    # Identify roles not in cache
+    roles_to_fetch = [r for r in user_roles if r not in ROLE_PERMISSIONS_CACHE]
 
-        if role_data:
-            perms = role_data.get("permissions", [])
+    if roles_to_fetch:
+        # Fetch all missing roles in a single query
+        cursor = db.roles.find({"name": {"$in": roles_to_fetch}})
+        async for role_doc in cursor:
+            ROLE_PERMISSIONS_CACHE[role_doc["name"]] = set(role_doc.get("permissions", []))
 
-            if "*" in perms:
-                return {"*"}  # super admin
-
-            permissions.update(perms)
+    for role in user_roles:
+        perms = ROLE_PERMISSIONS_CACHE.get(role, set())
+        if "*" in perms:
+            return {"*"}  # super admin
+        permissions.update(perms)
 
     return permissions
 

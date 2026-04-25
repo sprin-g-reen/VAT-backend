@@ -12,17 +12,22 @@ router = APIRouter(prefix="/admin/auth", tags=["Admin Auth"])
 
 @router.post("/login")
 async def login(payload: LoginRequest):
-    user = await db.users.find_one({"email": payload.email})
+    # Optimize: Fetch only necessary fields (projection)
+    user = await db.users.find_one(
+        {"email": payload.email},
+        {"password": 1, "roles": 1, "_id": 1}
+    )
 
     if not user:
         raise HTTPException(400, "Invalid credentials")
 
+    # 🔥 ADMIN CHECK - Done before password verification to save CPU/Time
+    user_roles = user.get("roles", [])
+    if "admin" not in user_roles and "super_admin" not in user_roles:
+        raise HTTPException(403, "Not an admin")
+
     if not await verify_password(payload.password, user["password"]):
         raise HTTPException(400, "Invalid credentials")
-
-    # 🔥 ADMIN CHECK
-    if "admin" not in user.get("roles", []) and "super_admin" not in user.get("roles", []):
-        raise HTTPException(403, "Not an admin")
 
     token = create_access_token({"sub": user["_id"]})
 

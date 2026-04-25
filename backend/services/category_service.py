@@ -13,8 +13,9 @@ async def create_category(data: CategoryCreate):
 async def get_all_categories(skip: int = 0, limit: int = 10):
     limit = min(limit, 100)
     return await db.categories.find(
-    {"is_active": True}
-).skip(skip).limit(limit).to_list(limit).to_list(limit)
+        {"is_active": True},
+        {"name": 1, "is_active": 1, "_id": 1}
+    ).skip(skip).limit(limit).to_list(limit)
 
 async def get_category(category_id: str):
     category = await db.categories.find_one({"_id": category_id})

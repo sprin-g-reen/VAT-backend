@@ -19,18 +19,21 @@ class RateLimiter:
         key = f"rate_limit:{identifier}:{request.scope['path']}"
 
         try:
-            current = await redis_client.get(key)
+            # Use a single atomic operation to increment and get the value
+            # This reduces one roundtrip to Redis
+            async with redis_client.pipeline(transaction=True) as pipe:
+                pipe.incr(key)
+                pipe.expire(key, self.window_seconds)
+                results = await pipe.execute()
+                current_count = results[0]
+
+            if current_count > self.requests_limit:
+                raise HTTPException(status_code=429, detail="Too many requests")
+        except HTTPException:
+            raise
         except Exception:
             # Fallback if redis is not available - allow request
             return
-
-        if current and int(current) >= self.requests_limit:
-            raise HTTPException(status_code=429, detail="Too many requests")
-
-        async with redis_client.pipeline(transaction=True) as pipe:
-            await pipe.incr(key)
-            await pipe.expire(key, self.window_seconds)
-            await pipe.execute()
 
 def rate_limit(requests: int, window: int):
     return RateLimiter(requests, window)

@@ -39,7 +39,7 @@ async def get_all_categories(
 
     categories = await db.categories.find(
         query,
-        {"name": 1, "is_active": 1}
+        {"name": 1, "is_active": 1, "_id": 1}
     ).skip(skip).limit(limit).to_list(limit)
 
     # ✅ normalize _id

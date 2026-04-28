@@ -11,7 +11,9 @@ router = APIRouter(prefix="/products", tags=["Public Products"])
 @router.get("", response_model=SuccessResponse[List[dict]])
 async def get_products(skip: int = 0, limit: int = 10):
     limit = min(limit, 100)
-    cache_key = f"products:skip={skip}:limit={limit}"
+    # Fetch current version
+    version = await redis_client.get("products_version") or "0"
+    cache_key = f"products:v{version}:skip={skip}:limit={limit}"
 
     # Try cache
     cached_products = await redis_client.get(cache_key)

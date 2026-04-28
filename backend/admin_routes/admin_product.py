@@ -26,9 +26,8 @@ async def create_product(
 
     await db.products.insert_one(product)
 
-    # Invalidate public product cache
-    async for key in redis_client.scan_iter("products:*"):
-        await redis_client.delete(key)
+    # Invalidate public product cache by incrementing version
+    await redis_client.incr("products_version")
 
     return SuccessResponse(
         message="Product created",
@@ -54,9 +53,8 @@ async def update_product(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Invalidate public product cache
-    async for key in redis_client.scan_iter("products:*"):
-        await redis_client.delete(key)
+    # Invalidate public product cache by incrementing version
+    await redis_client.incr("products_version")
 
     return SuccessResponse(message="Product updated")
 
@@ -70,9 +68,8 @@ async def delete_product(
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Invalidate public product cache
-    async for key in redis_client.scan_iter("products:*"):
-        await redis_client.delete(key)
+    # Invalidate public product cache by incrementing version
+    await redis_client.incr("products_version")
 
     return SuccessResponse(message="Product deleted")
 
@@ -129,9 +126,8 @@ async def toggle_product_status(
         {"$set": {"product_is_active": new_status}}
     )
 
-    # Invalidate public product cache
-    async for key in redis_client.scan_iter("products:*"):
-        await redis_client.delete(key)
+    # Invalidate public product cache by incrementing version
+    await redis_client.incr("products_version")
 
     return SuccessResponse(
         message="Status updated",

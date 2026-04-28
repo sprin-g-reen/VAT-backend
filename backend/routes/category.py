@@ -13,7 +13,9 @@ async def get_categories(
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100)
 ):
-    cache_key = f"categories:skip={skip}:limit={limit}"
+    # Fetch current version
+    version = await redis_client.get("categories_version") or "0"
+    cache_key = f"categories:v{version}:skip={skip}:limit={limit}"
 
     # Try cache
     cached_categories = await redis_client.get(cache_key)

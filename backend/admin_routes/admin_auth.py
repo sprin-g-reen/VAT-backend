@@ -29,6 +29,9 @@ async def login(payload: LoginRequest):
     if not await verify_password(payload.password, user["password"]):
         raise HTTPException(400, "Invalid credentials")
 
+    # Invalidate user cache on login to ensure fresh data (optional, but good for consistency)
+    await redis_client.delete(f"user_cache:{user['_id']}")
+
     token = create_access_token({"sub": user["_id"]})
 
     return {"access_token": token}

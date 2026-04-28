@@ -18,9 +18,8 @@ async def create_category(
 ):
     category_id = await category_service.create_category(data)
 
-    # Invalidate public category cache
-    async for key in redis_client.scan_iter("categories:*"):
-        await redis_client.delete(key)
+    # Invalidate public category cache by incrementing version
+    await redis_client.incr("categories_version")
 
     return SuccessResponse(
         message="Category created",
@@ -77,9 +76,8 @@ async def update_category(
 ):
     await category_service.update_category(category_id, data)
 
-    # Invalidate public category cache
-    async for key in redis_client.scan_iter("categories:*"):
-        await redis_client.delete(key)
+    # Invalidate public category cache by incrementing version
+    await redis_client.incr("categories_version")
 
     return SuccessResponse(message="Category updated")
 
@@ -95,9 +93,8 @@ async def delete_category(
         CategoryUpdate(is_active=False)
     )
 
-    # Invalidate public category cache
-    async for key in redis_client.scan_iter("categories:*"):
-        await redis_client.delete(key)
+    # Invalidate public category cache by incrementing version
+    await redis_client.incr("categories_version")
 
     return SuccessResponse(message="Category deactivated")
 
@@ -120,9 +117,8 @@ async def toggle_category_status(
         CategoryUpdate(is_active=new_status)
     )
 
-    # Invalidate public category cache
-    async for key in redis_client.scan_iter("categories:*"):
-        await redis_client.delete(key)
+    # Invalidate public category cache by incrementing version
+    await redis_client.incr("categories_version")
 
     return SuccessResponse(
         message="Status updated",

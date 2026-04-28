@@ -28,7 +28,7 @@ class CategoryCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Missing or empty category_name → validation error.
+    - Missing or empty category_name  validation error.
     - Duplicate category names should be handled at database level (unique constraint).
     - No built-in validation for format or length unless added explicitly.
 

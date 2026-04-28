@@ -8,7 +8,7 @@ from services.wishlist_service import move_item_to_cart, bulk_add_wishlist
 router = APIRouter(prefix="/wishlist", tags=["wishlist"])
 
 
-# ✅ BULK ADD
+#  BULK ADD
 @router.post("/bulk-add", response_model=SuccessResponse[dict])
 async def bulk_add_to_wishlist(
     data: AddToWishlistBulkRequest,
@@ -18,7 +18,7 @@ async def bulk_add_to_wishlist(
     return SuccessResponse(message=msg)
 
 
-# ✅ GET WISHLIST
+#  GET WISHLIST
 @router.get("/", response_model=SuccessResponse[dict])
 async def get_wishlist(current_user_id: str = Depends(get_current_user)):
 
@@ -33,7 +33,7 @@ async def get_wishlist(current_user_id: str = Depends(get_current_user)):
     return SuccessResponse(data=wishlist)
 
 
-# ✅ REMOVE ITEM
+#  REMOVE ITEM
 @router.delete("/remove/{product_id}", response_model=SuccessResponse[dict])
 async def remove_item(
     product_id: str,
@@ -50,7 +50,7 @@ async def remove_item(
     return SuccessResponse(message="item removed")
 
 
-# ✅ CLEAR WISHLIST
+#  CLEAR WISHLIST
 @router.delete("/clear", response_model=SuccessResponse[dict])
 async def clear_wishlist(current_user_id: str = Depends(get_current_user)):
 
@@ -62,7 +62,7 @@ async def clear_wishlist(current_user_id: str = Depends(get_current_user)):
     return SuccessResponse(message="wishlist cleared")
 
 
-# ✅ MOVE TO CART (QUERY PARAM)
+#  MOVE TO CART (QUERY PARAM)
 @router.post("/move-to-cart", response_model=SuccessResponse[dict])
 async def move_to_cart_api(
     product_id: str = Query(...),

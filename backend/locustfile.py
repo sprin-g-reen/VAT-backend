@@ -1,7 +1,12 @@
 from locust import task, constant
 from locust.contrib.fasthttp import FastHttpUser
 import random
+import logging
 from gevent.lock import Semaphore
+
+# Configure logging for locust
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("locust-test")
 
 login_lock = Semaphore()
 
@@ -29,7 +34,7 @@ class AdminOptimizedUser(FastHttpUser):
                         name="/admin/auth/login"
                     ) as res:
                         if res.status_code != 200:
-                            print(f"❌ LOGIN FAILED: {res.status_code} - {res.text}")
+                            logger.error(f"LOGIN FAILED: {res.status_code} - {res.text}")
                             return
 
                         data = res.json()
@@ -81,7 +86,7 @@ class AdminOptimizedUser(FastHttpUser):
                 except:
                     res.failure("Invalid JSON")
             else:
-                print("❌ CATEGORY ERROR:", res.status_code, res.text)
+                logger.error(f"CATEGORY ERROR: {res.status_code} - {res.text}")
                 res.failure(res.text)
 
     # ---------------- PRODUCT ---------------- #
@@ -106,5 +111,5 @@ class AdminOptimizedUser(FastHttpUser):
         ) as res:
 
             if res.status_code not in [200, 201]:
-                print("❌ PRODUCT ERROR:", res.status_code, res.text)
+                logger.error(f"PRODUCT ERROR: {res.status_code} - {res.text}")
                 res.failure(res.text)

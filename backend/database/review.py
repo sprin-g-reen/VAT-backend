@@ -45,8 +45,8 @@ class ReviewCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - rating < 1.0 or > 5.0 → validation error.
-    - order_item structure is flexible → may lead to inconsistency.
+    - rating < 1.0 or > 5.0  validation error.
+    - order_item structure is flexible  may lead to inconsistency.
     - verified_purchase must be set based on actual order data (service layer).
     - Duplicate reviews by same user for same product should be prevented externally.
     """

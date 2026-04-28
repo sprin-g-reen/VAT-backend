@@ -45,7 +45,7 @@ class VariantEmbedded(AppBaseModel):
 
     Edge Cases:
     -----------
-    - stock_quantity < 0 → raises validation error.
+    - stock_quantity < 0  raises validation error.
     - product_variants_price may be None (fallback to base product price).
     - Missing SKU may affect inventory tracking.
     """
@@ -135,9 +135,9 @@ class ProductCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Empty variants list → product may not be purchasable.
+    - Empty variants list  product may not be purchasable.
     - price and variant price mismatch must be handled in service layer.
-    - Invalid category_id or brand_id → must be validated separately.
+    - Invalid category_id or brand_id  must be validated separately.
     """
 
     product_name: str
@@ -258,8 +258,8 @@ class ProductUpdate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Empty payload → no changes.
-    - Invalid ObjectId → validation error.
+    - Empty payload  no changes.
+    - Invalid ObjectId  validation error.
     - Deactivating product may affect cart/order logic (handled elsewhere).
     """
 

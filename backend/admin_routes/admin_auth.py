@@ -22,7 +22,7 @@ async def login(payload: LoginRequest):
     if not user:
         raise HTTPException(400, "Invalid credentials")
 
-    # 🔥 ADMIN CHECK - Done before password verification to save CPU/Time
+    #  ADMIN CHECK - Done before password verification to save CPU/Time
     user_roles = user.get("roles", [])
     if "admin" not in user_roles and "super_admin" not in user_roles:
         raise HTTPException(403, "Not an admin")

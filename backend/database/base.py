@@ -20,15 +20,15 @@ class AppBaseModel(BaseModel):
     Configuration:
     --------------
     populate_by_name : bool
-        Allows fields to be populated using aliases (e.g., '_id' → 'id').
+        Allows fields to be populated using aliases (e.g., '_id'  'id').
 
     arbitrary_types_allowed : bool
         Allows usage of non-standard types like ObjectId.
 
     json_encoders : dict
         Custom serialization rules:
-        - datetime → ISO format string
-        - ObjectId → string
+        - datetime  ISO format string
+        - ObjectId  string
 
     Behavior:
     ---------

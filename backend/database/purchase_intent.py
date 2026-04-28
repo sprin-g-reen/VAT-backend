@@ -83,9 +83,9 @@ class OrderCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - If cart is empty → order creation should fail.
-    - Invalid user_id → error in service layer.
-    - Missing or incomplete address → validation error.
+    - If cart is empty  order creation should fail.
+    - Invalid user_id  error in service layer.
+    - Missing or incomplete address  validation error.
     """
 
     address: AddressEmbedded
@@ -180,9 +180,9 @@ class OrderStatusUpdate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Invalid status → raises ValueError.
+    - Invalid status  raises ValueError.
     - Case-sensitive values (must match exactly).
-    - Business rules (e.g., cannot go from DELIVERED → PENDING) must be handled separately.
+    - Business rules (e.g., cannot go from DELIVERED  PENDING) must be handled separately.
     """
 
     status: str

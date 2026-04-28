@@ -30,7 +30,7 @@ async def assign_role(
     payload: AssignRoleRequest
 ):
     await db.users.update_one(
-        {"_id": user_id},   # ✅ STRING ID
+        {"_id": user_id},   #  STRING ID
         {"$set": {"roles": payload.roles}}
     )
 

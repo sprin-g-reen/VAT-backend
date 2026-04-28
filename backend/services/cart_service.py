@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from datetime import datetime
 
 
-# ✅ CALCULATE SUMMARY (OFFLOADED TO MONGODB)
+#  CALCULATE SUMMARY (OFFLOADED TO MONGODB)
 async def calculate_summary(user_id: str):
     pipeline = [
         {"$match": {"_id": user_id}},
@@ -61,12 +61,12 @@ async def calculate_summary(user_id: str):
     return result[0]
 
 
-# ✅ BULK ADD TO CART (ATOMIC + NO DUPLICATES)
+#  BULK ADD TO CART (ATOMIC + NO DUPLICATES)
 async def bulk_add_items(user_id: str, product_ids: list):
     if not product_ids:
         raise HTTPException(status_code=400, detail="No products provided")
 
-    # ✅ fetch valid products (only required fields)
+    #  fetch valid products (only required fields)
     products = await db.products.find(
         {"_id": {"$in": product_ids}},
         {"product_name": 1, "price": 1}
@@ -75,7 +75,7 @@ async def bulk_add_items(user_id: str, product_ids: list):
     if not products:
         raise HTTPException(status_code=404, detail="No valid products found")
 
-    # ✅ prepare items
+    #  prepare items
     items = [
         {
             "product_id": str(p["_id"]),
@@ -86,7 +86,7 @@ async def bulk_add_items(user_id: str, product_ids: list):
         for p in products
     ]
 
-    # 🔥 ATOMIC UPSERT (no find_one)
+    #  ATOMIC UPSERT (no find_one)
     await db.carts.update_one(
         {"_id": user_id},
         {
@@ -100,7 +100,7 @@ async def bulk_add_items(user_id: str, product_ids: list):
     return "items added to cart"
 
 
-# ✅ UPDATE QUANTITY (ATOMIC)
+#  UPDATE QUANTITY (ATOMIC)
 async def update_cart_quantity(user_id: str, product_id: str, quantity: int):
 
     if quantity < 1:
@@ -127,7 +127,7 @@ async def update_cart_quantity(user_id: str, product_id: str, quantity: int):
     return "quantity updated"
 
 
-# ✅ REMOVE ITEM (ATOMIC)
+#  REMOVE ITEM (ATOMIC)
 async def remove_item_from_cart(user_id: str, product_id: str):
 
     result = await db.carts.update_one(
@@ -141,7 +141,7 @@ async def remove_item_from_cart(user_id: str, product_id: str):
     return "item removed"
 
 
-# ✅ CHECKOUT (SAFE)
+#  CHECKOUT (SAFE)
 async def checkout_cart(user_id: str):
 
     # Use aggregation to get both cart items and summary in one go
@@ -215,7 +215,7 @@ async def checkout_cart(user_id: str):
 
     result = await db.orders.insert_one(order)
 
-    # ✅ clear cart atomically
+    #  clear cart atomically
     await db.carts.update_one(
         {"_id": user_id},
         {"$set": {"items": [], "coupon": None}}

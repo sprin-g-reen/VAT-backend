@@ -10,7 +10,7 @@ from redis_db import redis_client
 router = APIRouter(prefix="/admin/category", tags=["Admin Category"])
 
 
-# ✅ CREATE CATEGORY
+#  CREATE CATEGORY
 @router.post("/create", response_model=SuccessResponse[dict], status_code=201)
 async def create_category(
     data: CategoryCreate,
@@ -27,7 +27,7 @@ async def create_category(
     )
 
 
-# ✅ GET ALL CATEGORIES (OPTIMIZED)
+#  GET ALL CATEGORIES (OPTIMIZED)
 @router.get("/all", response_model=SuccessResponse[List[CategoryOut]])
 async def get_all_categories(
     skip: int = Query(0, ge=0),
@@ -37,7 +37,7 @@ async def get_all_categories(
 ):
     query = {"is_active": True}
 
-    # 🔍 SEARCH SUPPORT
+    #  SEARCH SUPPORT
     if search:
         query["name"] = {"$regex": search, "$options": "i"}
 
@@ -46,14 +46,14 @@ async def get_all_categories(
         {"name": 1, "is_active": 1, "_id": 1}
     ).skip(skip).limit(limit).to_list(limit)
 
-    # ✅ normalize _id
+    #  normalize _id
     for c in categories:
         c["_id"] = str(c["_id"])
 
     return SuccessResponse(data=categories)
 
 
-# ✅ GET SINGLE CATEGORY
+#  GET SINGLE CATEGORY
 @router.get("/{category_id}", response_model=SuccessResponse[CategoryOut])
 async def get_category(
     category_id: str,
@@ -67,7 +67,7 @@ async def get_category(
     return SuccessResponse(data=category)
 
 
-# ✅ UPDATE CATEGORY
+#  UPDATE CATEGORY
 @router.put("/update/{category_id}", response_model=SuccessResponse[dict])
 async def update_category(
     category_id: str,
@@ -82,7 +82,7 @@ async def update_category(
     return SuccessResponse(message="Category updated")
 
 
-# ✅ SOFT DELETE
+#  SOFT DELETE
 @router.delete("/delete/{category_id}", response_model=SuccessResponse[dict])
 async def delete_category(
     category_id: str,
@@ -99,7 +99,7 @@ async def delete_category(
     return SuccessResponse(message="Category deactivated")
 
 
-# ✅ TOGGLE STATUS
+#  TOGGLE STATUS
 @router.patch("/status/{category_id}", response_model=SuccessResponse[dict])
 async def toggle_category_status(
     category_id: str,

@@ -26,7 +26,7 @@ from utils.circuit_breaker import circuit_breaker
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-# ✅ SIGNUP
+#  SIGNUP
 @router.post("/signup", response_model=SuccessResponse[dict], status_code=201)
 async def signup(data: SignupRequest):
 
@@ -62,7 +62,7 @@ async def signup(data: SignupRequest):
     )
 
 
-# ✅ SIGNIN
+#  SIGNIN
 @router.post("/signin", response_model=SuccessResponse[dict])
 @circuit_breaker(name="mongodb_auth", failure_threshold=10, recovery_timeout=60)
 async def signin(data: SigninRequest):
@@ -99,7 +99,7 @@ async def signin(data: SigninRequest):
     )
 
 
-# ✅ REFRESH TOKEN
+#  REFRESH TOKEN
 @router.post("/refresh", response_model=SuccessResponse[dict])
 async def refresh(refresh_token: str):
     payload = verify_token(refresh_token, "refresh")
@@ -130,7 +130,7 @@ async def refresh(refresh_token: str):
     )
 
 
-# ✅ LOGOUT
+#  LOGOUT
 @router.post("/logout", response_model=SuccessResponse[dict])
 async def logout(current_user_id: str = Depends(get_current_user)):
     await db.refresh_tokens.delete_one({"_id": current_user_id})
@@ -139,7 +139,7 @@ async def logout(current_user_id: str = Depends(get_current_user)):
 
 from fastapi import Request
 
-# ✅ FORGOT PASSWORD
+#  FORGOT PASSWORD
 @router.post("/forgot-password", response_model=SuccessResponse[dict])
 async def forgot_password(data: ForgotPasswordRequest, request: Request):
 
@@ -169,7 +169,7 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request):
     return SuccessResponse(message="If an account exists with this email, an OTP has been sent.")
 
 
-# ✅ RESET PASSWORD
+#  RESET PASSWORD
 @router.post("/reset-password", response_model=SuccessResponse[dict])
 async def reset_password(data: ResetPasswordRequest):
 
@@ -178,7 +178,7 @@ async def reset_password(data: ResetPasswordRequest):
     if not record or record["otp"] != data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    # 🔥 OTP expiry check (5 min)
+    #  OTP expiry check (5 min)
     if datetime.utcnow() - record["created_at"] > timedelta(minutes=5):
         raise HTTPException(status_code=400, detail="OTP expired")
 
@@ -195,7 +195,7 @@ async def reset_password(data: ResetPasswordRequest):
     return SuccessResponse(message="Password updated")
 
 
-# ✅ PROFILE UPDATE
+#  PROFILE UPDATE
 @router.post("/profile/{user_id}", response_model=SuccessResponse[dict])
 async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_id: str = Depends(get_current_user)):
 

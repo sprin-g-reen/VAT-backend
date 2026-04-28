@@ -47,7 +47,7 @@ Structure:
 
 Edge Cases:
 -----------
-- Missing import in this file → cannot be accessed via `from models import ...`
+- Missing import in this file  cannot be accessed via `from models import ...`
 - Circular imports may occur if not structured properly.
 - Using `import *` is generally discouraged unless controlled via __all__.
 

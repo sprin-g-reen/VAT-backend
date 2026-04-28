@@ -40,10 +40,10 @@ class PaymentCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Invalid order_id → should be handled in service layer.
+    - Invalid order_id  should be handled in service layer.
     - amount_paid should match order total (must be validated separately).
-    - Missing transaction_id for online payments → may cause tracking issues.
-    - Negative or zero amount_paid → should be validated in service layer.
+    - Missing transaction_id for online payments  may cause tracking issues.
+    - Negative or zero amount_paid  should be validated in service layer.
     """
 
     order_id: str

@@ -13,7 +13,7 @@ async def bulk_add_to_cart(
     data: AddToCartBulkRequest,
     current_user_id: str = Depends(get_current_user)
 ):
-    # ✅ use user_id from token
+    #  use user_id from token
     msg = await bulk_add_items(current_user_id, data.product_ids)
     return SuccessResponse(message=msg)
 

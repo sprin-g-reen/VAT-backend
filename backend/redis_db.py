@@ -46,8 +46,8 @@ class SafeRedis:
                 self.client = Redis.from_url(
                     REDIS_URL,
                     decode_responses=True,
-                    socket_connect_timeout=0.1,
-                    socket_timeout=0.1
+                    socket_connect_timeout=2.0,
+                    socket_timeout=2.0
                 )
                 await self.client.ping()
             except Exception:

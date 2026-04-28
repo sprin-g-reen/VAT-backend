@@ -42,7 +42,7 @@ class CartItemEmbedded(AppBaseModel):
 
     Edge Cases:
     -----------
-    - cart_quantity < 1 → validation error.
+    - cart_quantity < 1  validation error.
     - product_variants is flexible but may lead to inconsistency if structure varies.
     - product_name may become outdated if product changes later.
     """
@@ -124,9 +124,9 @@ class AddToCartRequest(AppBaseModel):
 
     Edge Cases:
     -----------
-    - quantity < 1 → validation error.
-    - Missing product_id → validation error.
-    - variant_data may be empty → may cause issues if variant is required.
+    - quantity < 1  validation error.
+    - Missing product_id  validation error.
+    - variant_data may be empty  may cause issues if variant is required.
     """
 
     product_id: str
@@ -157,7 +157,7 @@ class RemoveFromCartRequest(AppBaseModel):
 
     Edge Cases:
     -----------
-    - If product does not exist in cart → no change.
+    - If product does not exist in cart  no change.
     - Does not handle variant-specific removal (may remove multiple items).
     """
 

@@ -9,7 +9,7 @@ async def create_category(data: CategoryCreate):
     category = {
         "_id": category_id,
         "category_name": data.category_name,
-        "is_active": True   # ✅ REQUIRED
+        "is_active": True   #  REQUIRED
     }
 
     await db.categories.insert_one(category)

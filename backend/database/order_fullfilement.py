@@ -45,10 +45,10 @@ class ReturnCreate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - return_quantity < 1 → validation error.
-    - order_item structure is flexible → may lead to inconsistency if not standardized.
-    - refund_amount mismatch with actual payment → must be validated in service layer.
-    - Invalid order_id or user_id → must be handled externally.
+    - return_quantity < 1  validation error.
+    - order_item structure is flexible  may lead to inconsistency if not standardized.
+    - refund_amount mismatch with actual payment  must be validated in service layer.
+    - Invalid order_id or user_id  must be handled externally.
     """
 
     
@@ -155,9 +155,9 @@ class ReturnStatusUpdate(AppBaseModel):
 
     Edge Cases:
     -----------
-    - Invalid status → raises ValueError.
+    - Invalid status  raises ValueError.
     - Case-sensitive values.
-    - Business rules (e.g., APPROVED → COMPLETED only) must be handled in service layer.
+    - Business rules (e.g., APPROVED  COMPLETED only) must be handled in service layer.
     """
 
     status: str

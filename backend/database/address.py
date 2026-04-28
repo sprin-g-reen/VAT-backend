@@ -47,10 +47,10 @@ class AddressEmbedded(AppBaseModel):
 
     Edge Cases:
     -----------
-    - All fields are optional → incomplete addresses are allowed.
+    - All fields are optional  incomplete addresses are allowed.
     - zipcode exceeding 12 characters will raise validation error.
     - Since it's embedded, updating requires updating the parent document.
-    - No unique constraints → duplicate addresses possible unless handled manually.
+    - No unique constraints  duplicate addresses possible unless handled manually.
 
     Usage Example:
     --------------

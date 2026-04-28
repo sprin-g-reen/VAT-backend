@@ -1,5 +1,6 @@
 from passlib.context import CryptContext
 import jwt
+import logging
 from datetime import datetime, timedelta
 from config import Config
 from typing import Optional
@@ -62,6 +63,8 @@ from db import db
 from redis_db import redis_client
 from utils.json_helper import mongo_dumps, mongo_loads
 
+logger = logging.getLogger("auth-service")
+
 async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security)):
     payload = verify_access_token(auth.credentials)
 
@@ -79,11 +82,11 @@ async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security
         if cached_user:
             return mongo_loads(cached_user)
     except Exception as e:
-        # Redis is down → skip cache
-        print("⚠️ Redis skipped:", e)
+        # Redis is down  skip cache
+        logger.warning(f"Redis skipped in get_current_user: {e}")
 
     # DB Fallback
-    user = await db.users.find_one({"_id": user_id})  # ✅ STRING ID
+    user = await db.users.find_one({"_id": user_id})  # STRING ID
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")

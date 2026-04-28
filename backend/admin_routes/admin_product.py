@@ -21,7 +21,7 @@ async def create_product(
     product = data.model_dump()
     product["_id"] = product_id
 
-    # ✅ default status (important for public UI)
+    #  default status (important for public UI)
     product["product_is_active"] = True
 
     await db.products.insert_one(product)

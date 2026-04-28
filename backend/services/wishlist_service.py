@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from pymongo import ReturnDocument
 
 
-# ✅ BULK ADD (ATOMIC + NO DUPLICATES)
+#  BULK ADD (ATOMIC + NO DUPLICATES)
 async def bulk_add_wishlist(user_id: str, product_ids: list):
 
     if not product_ids:
@@ -34,10 +34,10 @@ async def bulk_add_wishlist(user_id: str, product_ids: list):
     return "items added to wishlist"
 
 
-# ✅ MOVE TO CART (FULL ATOMIC FLOW)
+#  MOVE TO CART (FULL ATOMIC FLOW)
 async def move_item_to_cart(user_id: str, product_id: str):
 
-    # 🔥 ATOMIC: remove item from wishlist and return it
+    #  ATOMIC: remove item from wishlist and return it
     wishlist = await db.wishlist.find_one_and_update(
         {"_id": user_id, "items.product_id": product_id},
         {"$pull": {"items": {"product_id": product_id}}},
@@ -52,7 +52,7 @@ async def move_item_to_cart(user_id: str, product_id: str):
         None
     )
 
-    # 🔥 ATOMIC CART UPDATE
+    #  ATOMIC CART UPDATE
     await db.carts.update_one(
         {"_id": user_id, "items.product_id": product_id},
         {"$inc": {"items.$.quantity": 1}}

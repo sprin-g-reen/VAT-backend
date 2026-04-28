@@ -72,9 +72,13 @@ async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security
     cache_key = f"user_cache:{user_id}"
 
     # Try cache first
-    cached_user = await redis_client.get(cache_key)
-    if cached_user:
-        return mongo_loads(cached_user)
+    cached_user = None
+
+    try:
+        cached_user = await redis_client.get(cache_key)
+    except Exception as e:
+        # Redis is down → skip cache
+        print("⚠️ Redis skipped:", e)
 
     # DB Fallback
     user = await db.users.find_one({"_id": user_id})  # ✅ STRING ID

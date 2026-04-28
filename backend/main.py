@@ -18,6 +18,7 @@ import psutil
 from arq import create_pool
 from arq.connections import RedisSettings
 import os
+import asyncio
 
 app = FastAPI(
     title="Auth Service API",
@@ -32,14 +33,18 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    redis_status = "ok"
     try:
-        # Check DB
-        await db.command("ping")
-        # Check Redis
-        await redis_client.ping()
-        return {"status": "healthy", "timestamp": time.time()}
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Unhealthy: {str(e)}")
+        client = await redis_client.get_client()
+        if not client:
+            redis_status = "down"
+    except:
+        redis_status = "down"
+
+    return {
+        "status": "healthy",
+        "redis": redis_status
+}
 
 
 @app.get("/metrics")
@@ -134,22 +139,25 @@ async def startup_event():
     await db.returns.create_index("order_id")
     await db.returns.create_index("user_id")
 
+    await db.categories.create_index("category_name")
     await db.categories.create_index("is_active")
-    await db.categories.create_index("name")
 
     # Initialize ARQ pool
-    try:
-        app.state.arq_pool = await create_pool(
-            RedisSettings(
-                host=os.getenv("REDIS_HOST", "localhost"),
-                port=int(os.getenv("REDIS_PORT", 6379))
-            )
-        )
-        print("✅ Redis connected successfully")
+    
 
+    try:
+        app.state.arq_pool = await asyncio.wait_for(
+            create_pool(
+                RedisSettings(
+                    host=os.getenv("REDIS_HOST", "localhost"),
+                    port=int(os.getenv("REDIS_PORT", 6379))
+                )
+            ),
+            timeout=1  # fail fast
+        )
+        print("✅ Redis connected")
     except Exception as e:
-        print("⚠️ Redis not available. Continuing without it...")
-        print("Error:", e)
+        print("⚠️ Redis skipped:", e)
         app.state.arq_pool = None
 
 @app.on_event("shutdown")

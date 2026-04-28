@@ -5,8 +5,13 @@ from fastapi import HTTPException
 
 async def create_category(data: CategoryCreate):
     category_id = await generate_category_id(db)
-    category = data.model_dump()
-    category["_id"] = category_id
+
+    category = {
+        "_id": category_id,
+        "category_name": data.category_name,
+        "is_active": True   # ✅ REQUIRED
+    }
+
     await db.categories.insert_one(category)
     return category_id
 
@@ -14,7 +19,7 @@ async def get_all_categories(skip: int = 0, limit: int = 10):
     limit = min(limit, 100)
     return await db.categories.find(
         {"is_active": True},
-        {"name": 1, "is_active": 1, "_id": 1}
+        {"category_name": 1, "is_active": 1, "_id": 1}
     ).skip(skip).limit(limit).to_list(limit)
 
 async def get_category(category_id: str):
@@ -24,10 +29,18 @@ async def get_category(category_id: str):
     return category
 
 async def update_category(category_id: str, data: CategoryUpdate):
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data = {
+        k: v for k, v in data.model_dump().items() if v is not None
+    }
+
     if not update_data:
         raise HTTPException(status_code=400, detail="No data to update")
-    result = await db.categories.update_one({"_id": category_id}, {"$set": update_data})
+
+    result = await db.categories.update_one(
+        {"_id": category_id},
+        {"$set": update_data}
+    )
+
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Category not found")
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db import db
+from redis_db import redis_client
 from utils.security import create_access_token, verify_password
 from pydantic import BaseModel
 

@@ -1,10 +1,5 @@
-from pymongo import ReturnDocument
-async def generate_product_id(db):
-    counter = await db.counters.find_one_and_update(
-        {"_id": "product_id"},
-        {"$inc": {"seq": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER
-    )
+import uuid
 
-    return f"PRD{counter['seq']:06d}"
+async def generate_product_id(db):
+    # Using UUID to avoid database bottleneck from counters collection
+    return f"PRD{uuid.uuid4().hex[:12].upper()}"

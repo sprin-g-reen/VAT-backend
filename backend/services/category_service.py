@@ -22,8 +22,8 @@ async def get_all_categories(skip: int = 0, limit: int = 10):
         {"category_name": 1, "is_active": 1, "_id": 1}
     ).skip(skip).limit(limit).to_list(limit)
 
-async def get_category(category_id: str):
-    category = await db.categories.find_one({"_id": category_id})
+async def get_category(category_id: str, projection: dict = None):
+    category = await db.categories.find_one({"_id": category_id}, projection)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     return category

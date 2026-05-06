@@ -87,7 +87,8 @@ async def lifespan(app: FastAPI):
             create_pool(
                 RedisSettings(
                     host=os.getenv("REDIS_HOST", "localhost"),
-                    port=int(os.getenv("REDIS_PORT", 6379))
+                    port=int(os.getenv("REDIS_PORT", 6379)),
+                    password=os.getenv("REDIS_PASSWORD")
                 )
             ),
             timeout=5.0  # Increased timeout for stability

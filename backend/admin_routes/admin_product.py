@@ -114,7 +114,7 @@ async def toggle_product_status(
     product_id: str,
     user=Depends(require_permission("update_product"))
 ):
-    product = await db.products.find_one({"_id": product_id})
+    product = await db.products.find_one({"_id": product_id}, {"product_is_active": 1})
 
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

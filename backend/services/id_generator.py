@@ -1,13 +1,8 @@
-from pymongo import ReturnDocument
+import uuid
 
 async def generate_id(db, collection_name: str, prefix: str, padding: int = 6):
-    counter = await db.counters.find_one_and_update(
-        {"_id": f"{collection_name}_id"},
-        {"$inc": {"seq": 1}},
-        upsert=True,
-        return_document=ReturnDocument.AFTER
-    )
-    return f"{prefix}{counter['seq']:0{padding}d}"
+    # Using UUID to avoid database bottleneck from counters collection
+    return f"{prefix}{uuid.uuid4().hex[:12].upper()}"
 
 async def generate_category_id(db):
     return await generate_id(db, "category", "CAT")

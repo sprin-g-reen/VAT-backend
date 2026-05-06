@@ -20,8 +20,18 @@ async def get_products(skip: int = 0, limit: int = 10):
     if cached_products:
         return SuccessResponse(data=mongo_loads(cached_products))
 
+    projection = {
+        "product_name": 1,
+        "category_id": 1,
+        "subcategory_id": 1,
+        "price": 1,
+        "stock_quantity": 1,
+        "product_is_active": 1,
+        "_id": 1
+    }
     products = await db.products.find(
-        {"product_is_active": True}
+        {"product_is_active": True},
+        projection
     ).skip(skip).limit(limit).to_list(limit)
 
     # Cache for 5 minutes

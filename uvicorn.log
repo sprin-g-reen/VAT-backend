@@ -1,0 +1,44 @@
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started parent process [141529]
+INFO:     Started server process [141646]
+INFO:     Waiting for application startup.
+INFO:     Started server process [141648]
+INFO:     Waiting for application startup.
+INFO:     Started server process [141649]
+INFO:     Waiting for application startup.
+INFO:     Started server process [141647]
+INFO:     Waiting for application startup.
+2026-05-06 06:46:34,542 - auth-service - INFO - Redis connected (ARQ pool initialized)
+INFO:     Application startup complete.
+2026-05-06 06:46:34,552 - auth-service - INFO - Redis connected (ARQ pool initialized)
+INFO:     Application startup complete.
+2026-05-06 06:46:34,650 - auth-service - INFO - Redis connected (ARQ pool initialized)
+INFO:     Application startup complete.
+2026-05-06 06:46:34,661 - auth-service - INFO - Redis connected (ARQ pool initialized)
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Shutting down
+INFO:     Shutting down
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Waiting for application shutdown.
+INFO:     Waiting for application shutdown.
+2026-05-06 06:47:28,762 - auth-service - INFO - Redis ARQ pool closed
+INFO:     Application shutdown complete.
+INFO:     Finished server process [141648]
+2026-05-06 06:47:28,763 - auth-service - INFO - Redis ARQ pool closed
+INFO:     Application shutdown complete.
+2026-05-06 06:47:28,763 - auth-service - INFO - Redis ARQ pool closed
+INFO:     Finished server process [141649]
+INFO:     Application shutdown complete.
+INFO:     Finished server process [141647]
+INFO:     Waiting for application shutdown.
+2026-05-06 06:47:28,775 - auth-service - INFO - Redis ARQ pool closed
+INFO:     Application shutdown complete.
+INFO:     Finished server process [141646]
+INFO:     Received SIGTERM, exiting.
+INFO:     Waiting for child process [141646]
+INFO:     Waiting for child process [141647]
+INFO:     Waiting for child process [141648]
+INFO:     Waiting for child process [141649]
+INFO:     Stopping parent process [141529]

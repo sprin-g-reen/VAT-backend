@@ -3,8 +3,8 @@ from utils.security import get_current_user
 from db import db
 
 
-# In-memory cache for role permissions to minimize DB hits
-ROLE_PERMISSIONS_CACHE = {}
+from redis_db import redis_client
+import json
 
 async def get_permissions(user):
     user_roles = user.get("roles", [])
@@ -12,21 +12,31 @@ async def get_permissions(user):
         return set()
 
     permissions = set()
-
-    # Identify roles not in cache
-    roles_to_fetch = [r for r in user_roles if r not in ROLE_PERMISSIONS_CACHE]
-
-    if roles_to_fetch:
-        # Fetch all missing roles in a single query
-        cursor = db.roles.find({"name": {"$in": roles_to_fetch}})
-        async for role_doc in cursor:
-            ROLE_PERMISSIONS_CACHE[role_doc["name"]] = set(role_doc.get("permissions", []))
+    roles_to_fetch = []
 
     for role in user_roles:
-        perms = ROLE_PERMISSIONS_CACHE.get(role, set())
-        if "*" in perms:
-            return {"*"}  # super admin
-        permissions.update(perms)
+        cache_key = f"role_perms:{role}"
+        cached = await redis_client.get(cache_key)
+        if cached:
+            perms = set(json.loads(cached))
+            if "*" in perms:
+                return {"*"}
+            permissions.update(perms)
+        else:
+            roles_to_fetch.append(role)
+
+    if roles_to_fetch:
+        # Fetch missing roles from DB and cache them
+        cursor = db.roles.find({"name": {"$in": roles_to_fetch}}, {"name": 1, "permissions": 1})
+        async for role_doc in cursor:
+            role_name = role_doc["name"]
+            role_perms = role_doc.get("permissions", [])
+            await redis_client.setex(f"role_perms:{role_name}", 3600, json.dumps(role_perms))
+
+            perms_set = set(role_perms)
+            if "*" in perms_set:
+                return {"*"}
+            permissions.update(perms_set)
 
     return permissions
 

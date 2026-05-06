@@ -24,7 +24,7 @@ async def get_categories(
 
     categories = await db.categories.find(
         {"is_active": True},
-        {"name": 1}
+        {"category_name": 1, "is_active": 1, "_id": 1}
     ).skip(skip).limit(limit).to_list(limit)
 
     # Cache for 10 minutes

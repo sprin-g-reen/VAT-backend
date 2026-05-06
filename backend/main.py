@@ -61,6 +61,7 @@ async def lifespan(app: FastAPI):
     await db.products.create_index("category_id")
     await db.products.create_index("subcategory_id")
     await db.products.create_index("product_name")
+    await db.products.create_index([("product_name", "text"), ("description", "text")])
     await db.products.create_index([("product_is_active", 1), ("_id", 1)])
 
     # SUBCATEGORIES

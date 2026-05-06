@@ -35,7 +35,7 @@ async def signup(data: SignupRequest):
             {"email": data.email},
             {"phone": data.phone}
         ]
-    })
+    }, {"_id": 1})
 
     if existing:
         raise HTTPException(status_code=409, detail="User already exists")
@@ -107,7 +107,7 @@ async def refresh(refresh_token: str):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     user_id = payload.get("sub")
-    stored_token = await db.refresh_tokens.find_one({"_id": user_id})
+    stored_token = await db.refresh_tokens.find_one({"_id": user_id}, {"token": 1})
 
     if not stored_token or stored_token["token"] != refresh_token:
         raise HTTPException(status_code=401, detail="Refresh token expired or revoked")
@@ -143,7 +143,7 @@ from fastapi import Request
 @router.post("/forgot-password", response_model=SuccessResponse[dict])
 async def forgot_password(data: ForgotPasswordRequest, request: Request):
 
-    user = await db.users.find_one({"email": data.email})
+    user = await db.users.find_one({"email": data.email}, {"email": 1})
 
     # Security: Generic response even if user not found to prevent enumeration
     if not user:
@@ -173,7 +173,7 @@ async def forgot_password(data: ForgotPasswordRequest, request: Request):
 @router.post("/reset-password", response_model=SuccessResponse[dict])
 async def reset_password(data: ResetPasswordRequest):
 
-    record = await db.otp.find_one({"email": data.email})
+    record = await db.otp.find_one({"email": data.email}, {"otp": 1, "created_at": 1})
 
     if not record or record["otp"] != data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")

@@ -72,7 +72,7 @@ async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     user_id = payload.get("sub")
-    cache_key = f"user_cache:{user_id}"
+    cache_key = f"user:{user_id}"
 
     # Try cache first
     cached_user = None
@@ -86,11 +86,11 @@ async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security
         logger.warning(f"Redis skipped in get_current_user: {e}")
 
     # DB Fallback
-    user = await db.users.find_one({"_id": user_id})  # STRING ID
+    user = await db.users.find_one({"_id": user_id}, {"password": 0})  # STRING ID
 
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
-    # Cache for 10 minutes
+    # Cache for 10 minutes (600s) as requested (5-10 mins)
     await redis_client.setex(cache_key, 600, mongo_dumps(user))
     return user

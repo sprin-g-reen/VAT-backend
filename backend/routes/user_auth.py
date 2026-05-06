@@ -72,7 +72,7 @@ async def signin(data: SigninRequest):
             {"email": data.identifier},
             {"phone": data.identifier}
         ]
-    }, {"password": 1, "email": 1, "phone": 1})
+    }, {"password": 1, "email": 1, "phone": 1, "_id": 1})
 
     # Security: Generic error message to prevent user enumeration
     if not user or not await verify_password(data.password, user["password"]):
@@ -185,7 +185,7 @@ async def reset_password(data: ResetPasswordRequest):
     # Get user to invalidate cache
     user = await db.users.find_one({"email": data.email}, {"_id": 1})
     if user:
-        await redis_client.delete(f"user_cache:{user['_id']}")
+        await redis_client.delete(f"user:{user['_id']}")
 
     await db.users.update_one(
         {"email": data.email},
@@ -223,6 +223,6 @@ async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_
         raise HTTPException(status_code=404, detail="User not found")
 
     # Invalidate cache
-    await redis_client.delete(f"user_cache:{user_id}")
+    await redis_client.delete(f"user:{user_id}")
 
     return SuccessResponse(message="profile updated")

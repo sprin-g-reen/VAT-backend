@@ -105,7 +105,7 @@ async def toggle_category_status(
     category_id: str,
     user=Depends(require_permission("update_category"))
 ):
-    category = await category_service.get_category_by_id(category_id)
+    category = await category_service.get_category(category_id, {"is_active": 1})
 
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")

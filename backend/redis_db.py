@@ -2,6 +2,9 @@ from redis.asyncio import Redis
 import os
 import asyncio
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 

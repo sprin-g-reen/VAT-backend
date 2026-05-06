@@ -21,6 +21,9 @@ import os
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -83,14 +86,9 @@ async def lifespan(app: FastAPI):
 
     # Initialize ARQ pool
     try:
+        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         app.state.arq_pool = await asyncio.wait_for(
-            create_pool(
-                RedisSettings(
-                    host=os.getenv("REDIS_HOST", "localhost"),
-                    port=int(os.getenv("REDIS_PORT", 6379)),
-                    password=os.getenv("REDIS_PASSWORD")
-                )
-            ),
+            create_pool(RedisSettings.from_dsn(redis_url)),
             timeout=5.0  # Increased timeout for stability
         )
         logger.info("Redis connected (ARQ pool initialized)")

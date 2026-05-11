@@ -1,0 +1,6 @@
+INFO:     Started server process [63030]
+INFO:     Waiting for application startup.
+2026-05-11 05:39:04,610 - auth-service - INFO - MongoDB connection verified successfully
+2026-05-11 05:39:11,502 - auth-service - INFO - Redis connected (ARQ pool initialized)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)

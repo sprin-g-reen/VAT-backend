@@ -10,9 +10,10 @@ from routes import (
 )
 from admin_routes import (
     admin_auth,admin_product,admin_category,admin_roles,admin_create)
-from db import db
+from db import db, verify_mongodb_connection
 from database.base import ErrorResponse, SuccessResponse
 from redis_db import redis_client
+from config import Config
 import time
 import psutil
 from arq import create_pool
@@ -38,6 +39,12 @@ logger = logging.getLogger("auth-service")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # STARTUP
+    # Mandatory MongoDB Check
+    if not await verify_mongodb_connection():
+        logger.critical("Failed to connect to MongoDB. Exiting...")
+        import sys
+        sys.exit(1)
+
     # USERS
     await db.users.create_index("email", unique=True, sparse=True)
     await db.users.create_index("phone", unique=True, sparse=True)
@@ -87,10 +94,10 @@ async def lifespan(app: FastAPI):
 
     # Initialize ARQ pool
     try:
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        redis_url = Config.REDIS_URL
         app.state.arq_pool = await asyncio.wait_for(
             create_pool(RedisSettings.from_dsn(redis_url)),
-            timeout=5.0  # Increased timeout for stability
+            timeout=10.0  # Increased timeout for stability
         )
         logger.info("Redis connected (ARQ pool initialized)")
     except Exception as e:

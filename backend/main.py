@@ -2,15 +2,25 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from routes import (
     user_auth,
     cart,
     wishlist,
     product,
     category,
+    banner,
+    content_controller,
 )
 from admin_routes import (
-    admin_auth,admin_product,admin_category,admin_roles,admin_create)
+    admin_auth,
+    admin_product,
+    admin_category,
+    admin_roles,
+    admin_create,
+    admin_banner,
+    admin_content_controller,
+)
 from db import db, verify_mongodb_connection
 from database.base import ErrorResponse, SuccessResponse
 from redis_db import redis_client
@@ -93,6 +103,10 @@ async def lifespan(app: FastAPI):
     await db.categories.create_index("category_name")
     await db.categories.create_index("is_active")
 
+    # BANNERS
+    await db.banners.create_index("order")
+    await db.banners.create_index("status")
+
     # Initialize ARQ pool
     try:
         redis_url = Config.REDIS_URL
@@ -123,10 +137,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:5500",
         "http://localhost:5501",
         "http://localhost:8080",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
         "http://127.0.0.1:5500",
         "http://127.0.0.1:5501",
         "http://127.0.0.1:8080",
@@ -175,16 +191,23 @@ async def metrics():
     }
 
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.include_router(user_auth.router)
 app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(product.router)
 app.include_router(category.router)
+app.include_router(banner.router)
+app.include_router(content_controller.router)
 app.include_router(admin_auth.router)
 app.include_router(admin_product.router)
 app.include_router(admin_category.router)
 app.include_router(admin_roles.router)
 app.include_router(admin_create.router)
+app.include_router(admin_banner.router)
+app.include_router(admin_content_controller.router)
 
 
 

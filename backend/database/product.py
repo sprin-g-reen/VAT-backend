@@ -148,6 +148,8 @@ class ProductCreate(AppBaseModel):
     product_is_popular: bool = False
     variants: List[VariantEmbedded] = []
     images: List[ProductImageEmbedded] = []
+    main_image: Optional[str] = None
+    additional_images: List[ProductImageEmbedded] = []
 
 
 class ProductOut(AppBaseModel):
@@ -219,6 +221,10 @@ class ProductOut(AppBaseModel):
     product_created_at: datetime = Field(default_factory=datetime.utcnow)
     variants: List[VariantEmbedded] = []
     images: List[ProductImageEmbedded] = []
+    main_image: Optional[str] = None
+    additional_images: List[ProductImageEmbedded] = []
+    main_image: Optional[str] = None
+    additional_images: List[ProductImageEmbedded] = []
 
 
 class ProductUpdate(AppBaseModel):
@@ -272,3 +278,7 @@ class ProductUpdate(AppBaseModel):
     subcategory_id: Optional[str] = None
     product_is_popular: Optional[bool] = None
     product_is_active: Optional[bool] = None
+    variants: Optional[List[VariantEmbedded]] = None
+    images: Optional[List[ProductImageEmbedded]] = None
+    main_image: Optional[str] = None
+    additional_images: Optional[List[ProductImageEmbedded]] = None

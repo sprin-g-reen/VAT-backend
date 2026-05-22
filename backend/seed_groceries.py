@@ -204,7 +204,9 @@ async def seed_data():
                 "category_id": cat_id,
                 "subcategory_id": subcat_id,
                 "product_is_active": True,
+                "main_image": prod["image"],
                 "images": [{"image_url": prod["image"]}],
+                "additional_images": [],
                 "variants": prod["variants"]
             }
             await db.products.insert_one(prod_doc)

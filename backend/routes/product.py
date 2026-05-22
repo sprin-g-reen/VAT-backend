@@ -34,6 +34,8 @@ async def get_products(
         "product_is_active": 1,
         "product_is_popular": 1,
         "images": 1,
+        "main_image": 1,
+        "additional_images": 1,
         "description": 1,
         "variants": 1,
         "_id": 1

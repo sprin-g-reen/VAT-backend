@@ -1,9 +1,15 @@
+import sys
+import os
+# Add backend directory to path so imports resolve correctly on Vercel
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from routes import (
+
     user_auth,
     cart,
     wishlist,

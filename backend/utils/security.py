@@ -94,3 +94,11 @@ async def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security
     # Cache for 10 minutes (600s) as requested (5-10 mins)
     await redis_client.setex(cache_key, 600, mongo_dumps(user))
     return user
+
+
+async def get_current_user_id(auth: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    payload = verify_access_token(auth.credentials)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload.get("sub")
+

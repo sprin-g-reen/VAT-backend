@@ -54,8 +54,8 @@ class OrderItemEmbedded(AppBaseModel):
     product_id: str
     product_name: Optional[str] = None
     product_variants: Dict[str, Any] = Field(default_factory=dict)
-    order_quantity: int= Field( ge=1)
-    price_at_order: float = Field( ge=0.0)
+    order_quantity: int = Field(default=1, alias="quantity", ge=1)
+    price_at_order: float = Field(default=0.0, alias="price", ge=0.0)
 
 
 class OrderCreate(AppBaseModel):

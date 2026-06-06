@@ -33,9 +33,7 @@ async def calculate_summary(user_id: str):
                         }
                     ]
                 },
-                "shipping": {
-                    "$cond": [{"$gt": ["$subtotal", 100]}, 0, 10]
-                }
+                "shipping": {"$literal": 0}
             }
         },
         {
@@ -54,8 +52,8 @@ async def calculate_summary(user_id: str):
         return {
             "subtotal": 0,
             "discount": 0,
-            "shipping": 10,
-            "total": 10
+            "shipping": 0,
+            "total": 0
         }
 
     return result[0]
@@ -142,7 +140,7 @@ async def remove_item_from_cart(user_id: str, product_id: str):
 
 
 #  CHECKOUT (SAFE)
-async def checkout_cart(user_id: str):
+async def checkout_cart(user_id: str, address: dict = None):
 
     # Use aggregation to get both cart items and summary in one go
     pipeline = [
@@ -181,9 +179,7 @@ async def checkout_cart(user_id: str):
                         }
                     ]
                 },
-                "shipping": {
-                    "$cond": [{"$gt": ["$subtotal", 100]}, 0, 10]
-                }
+                "shipping": {"$literal": 0}
             }
         },
         {
@@ -210,15 +206,48 @@ async def checkout_cart(user_id: str):
         "items": cart_data["items"],
         "total_amount": cart_data["total"],
         "status": "PENDING",
-        "created_at": datetime.utcnow()
+        "address": address,
+        "created_at": datetime.utcnow(),
+        "order_created_at": datetime.utcnow()
     }
 
     result = await db.orders.insert_one(order)
 
-    #  clear cart atomically
+    return str(result.inserted_id)
+
+
+#  SYNC CART (OVERWRITE SAFELY)
+async def sync_cart_items(user_id: str, items: list):
+    if not items:
+        await db.carts.update_one(
+            {"_id": user_id},
+            {"$set": {"items": []}},
+            upsert=True
+        )
+        return "cart cleared"
+
+    product_ids = [item.product_id for item in items]
+    products = await db.products.find(
+        {"_id": {"$in": product_ids}},
+        {"product_name": 1, "price": 1}
+    ).to_list(length=len(product_ids))
+
+    product_map = {str(p["_id"]): p for p in products}
+
+    cart_items = []
+    for item in items:
+        prod = product_map.get(item.product_id)
+        if prod:
+            cart_items.append({
+                "product_id": item.product_id,
+                "product_name": prod.get("product_name"),
+                "price": prod.get("price", 0.0),
+                "quantity": item.quantity
+            })
+
     await db.carts.update_one(
         {"_id": user_id},
-        {"$set": {"items": [], "coupon": None}}
+        {"$set": {"items": cart_items}},
+        upsert=True
     )
-
-    return str(result.inserted_id)
+    return "cart synced"

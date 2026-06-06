@@ -49,6 +49,8 @@ class CartItemEmbedded(AppBaseModel):
 
     product_id: str
     product_name: Optional[str] = None
+    price: float = Field(default=0.0)
+    quantity: int = Field(default=1, ge=1)
     product_variants: Dict[str, Any] = Field(default_factory=dict)
     cart_quantity: int = Field(default=1, ge=1)
 
@@ -93,6 +95,19 @@ class CartOut(AppBaseModel):
 
 class AddToCartBulkRequest(BaseModel):
     product_ids: List[str]
+
+
+class CartSyncItem(BaseModel):
+    product_id: str
+    quantity: int = Field(default=1, ge=1)
+
+
+class CartSyncRequest(BaseModel):
+    items: List[CartSyncItem]
+
+
+class CheckoutRequest(BaseModel):
+    address: Optional[Dict[str, Any]] = None
 
 
 class AddToCartRequest(AppBaseModel):

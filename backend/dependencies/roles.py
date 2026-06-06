@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from fastapi import Depends, HTTPException
 from utils.security import get_current_user
 from db import db
@@ -40,6 +41,8 @@ DEFAULT_ADMIN_PERMISSIONS = {
     "create_admin_user",
     "create_role",
     "update_role",
+    "view_review",
+    "delete_review",
 }
 
 async def ensure_default_admin_roles():

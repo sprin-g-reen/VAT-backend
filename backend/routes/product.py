@@ -4,6 +4,7 @@ from db import db
 from redis_db import redis_client
 from database.base import SuccessResponse
 from utils.json_helper import mongo_dumps, mongo_loads
+from services import review_service
 
 router = APIRouter(prefix="/products", tags=["Public Products"])
 
@@ -30,6 +31,10 @@ async def get_products(
         "category_id": 1,
         "subcategory_id": 1,
         "price": 1,
+        "original_price": 1,
+        "discounted_price": 1,
+        "mrp": 1,
+        "sale_price": 1,
         "stock_quantity": 1,
         "product_is_active": 1,
         "product_is_popular": 1,
@@ -52,6 +57,12 @@ async def get_products(
         projection
     ).skip(skip).limit(limit).to_list(limit)
 
+    # Add rating info to each product
+    for prod in products:
+        rating_info = await review_service.get_product_rating(prod["_id"])
+        prod["rating"] = rating_info["average_rating"]
+        prod["review_count"] = rating_info["review_count"]
+
     # Cache for 5 minutes
     await redis_client.setex(cache_key, 300, mongo_dumps(products))
 
@@ -64,5 +75,10 @@ async def get_product(product_id: str):
 
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    # Add rating info
+    rating_info = await review_service.get_product_rating(product_id)
+    product["rating"] = rating_info["average_rating"]
+    product["review_count"] = rating_info["review_count"]
 
     return SuccessResponse(data=mongo_loads(mongo_dumps(product)))

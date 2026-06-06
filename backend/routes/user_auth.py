@@ -13,7 +13,7 @@ from utils.security import (
     create_access_token,
     create_refresh_token,
     verify_token,
-    get_current_user
+    get_current_user_id
 )
 from utils.rate_limiter import rate_limit
 from services.user_id_generator import generate_user_id
@@ -48,7 +48,8 @@ async def signup(data: SignupRequest):
         "phone": data.phone,
         "email": data.email,
         "password": await hash_password(data.password),
-        "profile_completed": False
+        "profile_completed": False,
+        "created_at": datetime.utcnow()
     }
 
     try:
@@ -132,7 +133,7 @@ async def refresh(refresh_token: str):
 
 #  LOGOUT
 @router.post("/logout", response_model=SuccessResponse[dict])
-async def logout(current_user_id: str = Depends(get_current_user)):
+async def logout(current_user_id: str = Depends(get_current_user_id)):
     await db.refresh_tokens.delete_one({"_id": current_user_id})
     return SuccessResponse(message="logged out")
 
@@ -197,7 +198,7 @@ async def reset_password(data: ResetPasswordRequest):
 
 #  PROFILE UPDATE
 @router.post("/profile/{user_id}", response_model=SuccessResponse[dict])
-async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_id: str = Depends(get_current_user)):
+async def update_profile(user_id: str, data: ProfileUpdateRequest, current_user_id: str = Depends(get_current_user_id)):
 
     # Authorization: Ensure user is updating their own profile
     if user_id != current_user_id:

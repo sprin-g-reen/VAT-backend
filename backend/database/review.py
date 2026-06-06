@@ -108,7 +108,10 @@ class ReviewOut(AppBaseModel):
     """
 
     id: Optional[str] = Field(default=None, alias="_id")
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
     product_id: str
+    product_name: Optional[str] = None
     order_item: dict = {}
     verified_purchase: bool = False
     rating: float

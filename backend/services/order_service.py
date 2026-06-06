@@ -10,6 +10,9 @@ from services.id_generator import (
 )
 from fastapi import HTTPException
 from datetime import datetime
+import logging
+
+logger = logging.getLogger("order-service")
 
 # ORDER SERVICES
 async def create_order(data: OrderCreate, user_id: str):
@@ -32,7 +35,9 @@ async def create_order(data: OrderCreate, user_id: str):
         order["total_amount"] = 0
 
     order["order_created_at"] = datetime.utcnow()
+    order["created_at"] = order["order_created_at"]
     await db.orders.insert_one(order)
+    logger.info(f"Created order {order_id} for user {user_id} with total {order.get('total_amount')}")
     return order_id
 
 async def get_order(order_id: str):

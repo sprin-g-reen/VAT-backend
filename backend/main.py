@@ -17,6 +17,8 @@ from routes import (
     payment,
     purchase_intent,
     order_fullfilement,
+    review,
+    analytics_tracker,
 )
 from admin_routes import (
     admin_auth,
@@ -27,6 +29,9 @@ from admin_routes import (
     admin_banner,
     admin_promo_card,
     admin_content_controller,
+    admin_analytics,
+    admin_order,
+    admin_review,
 )
 from db import db, verify_mongodb_connection
 from database.base import ErrorResponse, SuccessResponse
@@ -119,6 +124,11 @@ async def lifespan(app: FastAPI):
     await db.promo_cards.create_index("order")
     await db.promo_cards.create_index("status")
 
+    # PAGE ANALYTICS
+    await db.page_analytics.create_index("timestamp")
+    await db.page_analytics.create_index("page")
+    await db.page_analytics.create_index([("page", 1), ("timestamp", 1)])
+
     # Backfill reserved roles for admin users created before RBAC was introduced.
     await ensure_default_admin_roles()
 
@@ -148,10 +158,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# CORS: allow the frontend origin(s). For development include http://localhost:3000 and Live Server ports
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:5501",
+        "http://localhost:5501",
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -210,6 +228,7 @@ app.include_router(address.router)
 app.include_router(payment.router)
 app.include_router(purchase_intent.router)
 app.include_router(order_fullfilement.router)
+app.include_router(review.router)
 app.include_router(admin_auth.router)
 app.include_router(admin_product.router)
 app.include_router(admin_category.router)
@@ -218,6 +237,10 @@ app.include_router(admin_create.router)
 app.include_router(admin_banner.router)
 app.include_router(admin_promo_card.router)
 app.include_router(admin_content_controller.router)
+app.include_router(admin_analytics.router)
+app.include_router(admin_order.router)
+app.include_router(admin_review.router)
+app.include_router(analytics_tracker.router)
 
 
 

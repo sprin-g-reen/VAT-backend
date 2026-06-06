@@ -143,6 +143,10 @@ class ProductCreate(AppBaseModel):
     product_name: str
     description: Optional[str] = None
     price: Optional[float] = None
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
+    mrp: Optional[float] = None
+    sale_price: Optional[float] = None
     category_id: Optional[str] = None
     subcategory_id: Optional[str] = None
     product_is_popular: bool = False
@@ -214,6 +218,10 @@ class ProductOut(AppBaseModel):
     product_name: str
     description: Optional[str] = None
     price: Optional[float] = None
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
+    mrp: Optional[float] = None
+    sale_price: Optional[float] = None
     category: Optional[CategoryOut] = None
     subcategory: Optional[SubcategoryOut] = None
     product_is_active: bool = True
@@ -223,8 +231,8 @@ class ProductOut(AppBaseModel):
     images: List[ProductImageEmbedded] = []
     main_image: Optional[str] = None
     additional_images: List[ProductImageEmbedded] = []
-    main_image: Optional[str] = None
-    additional_images: List[ProductImageEmbedded] = []
+    rating: float = 0.0
+    review_count: int = 0
 
 
 class ProductUpdate(AppBaseModel):
@@ -274,6 +282,10 @@ class ProductUpdate(AppBaseModel):
     product_name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
+    original_price: Optional[float] = None
+    discounted_price: Optional[float] = None
+    mrp: Optional[float] = None
+    sale_price: Optional[float] = None
     category_id: Optional[str] = None
     subcategory_id: Optional[str] = None
     product_is_popular: Optional[bool] = None

@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends
 from database.order_fullfilement import ReturnCreate, ReturnStatusUpdate, ReturnOut
 from database.base import SuccessResponse
 from services import order_service
-from utils.security import get_current_user
+from utils.security import get_current_user_id
 from typing import List
 
 router = APIRouter(prefix="/return", tags=["return"])
 
 @router.post("/create", response_model=SuccessResponse[dict], status_code=201)
-async def create_return_request(data: ReturnCreate, current_user_id: str = Depends(get_current_user)):
+async def create_return_request(data: ReturnCreate, current_user_id: str = Depends(get_current_user_id)):
     return_id = await order_service.create_return_request(data, current_user_id)
     return SuccessResponse(message="Return request submitted", data={"_id": return_id})
 

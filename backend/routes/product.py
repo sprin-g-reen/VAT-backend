@@ -57,11 +57,30 @@ async def get_products(
         projection
     ).skip(skip).limit(limit).to_list(limit)
 
-    # Add rating info to each product
+    # Add rating info to each product efficiently in one bulk query
+    product_ids = [prod["_id"] for prod in products]
+    ratings_map = await review_service.get_products_ratings(product_ids)
+    
+    # Bulk fetch categories to populate category details
+    category_ids = list({prod["category_id"] for prod in products if prod.get("category_id")})
+    categories_map = {}
+    if category_ids:
+        categories = await db.categories.find({"_id": {"$in": category_ids}}).to_list(len(category_ids))
+        categories_map = {cat["_id"]: cat for cat in categories}
+
     for prod in products:
-        rating_info = await review_service.get_product_rating(prod["_id"])
+        rating_info = ratings_map.get(prod["_id"], {"average_rating": 0.0, "review_count": 0})
         prod["rating"] = rating_info["average_rating"]
         prod["review_count"] = rating_info["review_count"]
+        
+        cid = prod.get("category_id")
+        if cid and cid in categories_map:
+            cat = categories_map[cid]
+            prod["category_name"] = cat.get("category_name")
+            prod["category"] = {
+                "_id": cat.get("_id"),
+                "category_name": cat.get("category_name")
+            }
 
     # Cache for 5 minutes
     await redis_client.setex(cache_key, 300, mongo_dumps(products))
@@ -80,5 +99,16 @@ async def get_product(product_id: str):
     rating_info = await review_service.get_product_rating(product_id)
     product["rating"] = rating_info["average_rating"]
     product["review_count"] = rating_info["review_count"]
+
+    # Populate category details
+    category_id = product.get("category_id")
+    if category_id:
+        category = await db.categories.find_one({"_id": category_id})
+        if category:
+            product["category_name"] = category.get("category_name")
+            product["category"] = {
+                "_id": category.get("_id"),
+                "category_name": category.get("category_name")
+            }
 
     return SuccessResponse(data=mongo_loads(mongo_dumps(product)))

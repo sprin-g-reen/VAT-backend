@@ -36,7 +36,7 @@ class SafeRedis:
     def __init__(self):
         self.client = None
         self._last_connect_attempt = 0
-        self._retry_interval = 60  # seconds
+        self._retry_interval = 300  # seconds - try connecting once every 5 minutes if down
 
     async def get_client(self):
         now = asyncio.get_event_loop().time()
@@ -46,8 +46,8 @@ class SafeRedis:
                 self.client = Redis.from_url(
                     REDIS_URL,
                     decode_responses=True,
-                    socket_connect_timeout=2.0,
-                    socket_timeout=2.0
+                    socket_connect_timeout=0.5, # Reduced from 2.0 to prevent long blocking
+                    socket_timeout=0.5
                 )
                 await self.client.ping()
             except Exception:

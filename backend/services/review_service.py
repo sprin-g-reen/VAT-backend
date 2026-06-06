@@ -54,6 +54,32 @@ async def get_product_rating(product_id: str):
     return {"average_rating": 0.0, "review_count": 0}
 
 
+async def get_products_ratings(product_ids: list):
+    if not product_ids:
+        return {}
+    pipeline = [
+        {"$match": {"product_id": {"$in": product_ids}}},
+        {
+            "$group": {
+                "_id": "$product_id",
+                "average_rating": {"$avg": "$rating"},
+                "review_count": {"$sum": 1}
+            }
+        }
+    ]
+    cursor = db.reviews.aggregate(pipeline)
+    results = await cursor.to_list(None)
+    
+    ratings_map = {}
+    for res in results:
+        ratings_map[res["_id"]] = {
+            "average_rating": round(res["average_rating"], 1),
+            "review_count": res["review_count"]
+        }
+    return ratings_map
+
+
+
 async def delete_review(review_id: str, user_id: str):
     result = await db.reviews.delete_one({"_id": review_id, "user_id": user_id})
     if result.deleted_count == 0:

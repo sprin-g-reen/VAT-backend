@@ -154,6 +154,12 @@ class ProductCreate(AppBaseModel):
     images: List[ProductImageEmbedded] = []
     main_image: Optional[str] = None
     additional_images: List[ProductImageEmbedded] = []
+    details_title: Optional[str] = None
+    details_description: Optional[str] = None
+    details_bullets: List[str] = []
+    specifications: List[dict] = []
+    return_policy: Optional[str] = None
+    delivery_note: Optional[str] = None
 
 
 class ProductOut(AppBaseModel):
@@ -233,6 +239,12 @@ class ProductOut(AppBaseModel):
     additional_images: List[ProductImageEmbedded] = []
     rating: float = 0.0
     review_count: int = 0
+    details_title: Optional[str] = None
+    details_description: Optional[str] = None
+    details_bullets: List[str] = []
+    specifications: List[dict] = []
+    return_policy: Optional[str] = None
+    delivery_note: Optional[str] = None
 
 
 class ProductUpdate(AppBaseModel):
@@ -294,3 +306,9 @@ class ProductUpdate(AppBaseModel):
     images: Optional[List[ProductImageEmbedded]] = None
     main_image: Optional[str] = None
     additional_images: Optional[List[ProductImageEmbedded]] = None
+    details_title: Optional[str] = None
+    details_description: Optional[str] = None
+    details_bullets: Optional[List[str]] = None
+    specifications: Optional[List[dict]] = None
+    return_policy: Optional[str] = None
+    delivery_note: Optional[str] = None

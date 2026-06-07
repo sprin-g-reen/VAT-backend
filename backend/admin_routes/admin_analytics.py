@@ -25,8 +25,9 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
     total_visitors = await google_analytics.get_total_unique_visitors()
 
     # --- Total Revenue (sum of successful payments) ---
+    PAID_REVENUE_STATUSES = ["CONFIRMED", "SHIPPED", "DISPATCHED", "OUT_FOR_DELIVERY", "DELIVERED"]
     revenue_pipeline = [
-        {"$match": {"status": {"$ne": "CANCELLED"}}},
+        {"$match": {"status": {"$in": PAID_REVENUE_STATUSES}}},
         {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}},
     ]
     revenue_cursor = db.orders.aggregate(revenue_pipeline)
@@ -66,14 +67,14 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
 
     # 2. Revenue Trend & Progress (MongoDB sourced)
     this_month_revenue_pipeline = [
-        {"$match": {"status": {"$ne": "CANCELLED"}, "created_at": {"$gte": this_month_start}}},
+        {"$match": {"status": {"$in": PAID_REVENUE_STATUSES}, "created_at": {"$gte": this_month_start}}},
         {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}},
     ]
     this_month_revenue_result = await db.orders.aggregate(this_month_revenue_pipeline).to_list(length=1)
     this_month_rev = this_month_revenue_result[0]["total"] if this_month_revenue_result else 0
 
     last_month_revenue_pipeline = [
-        {"$match": {"status": {"$ne": "CANCELLED"}, "created_at": {"$gte": last_month_start, "$lt": this_month_start}}},
+        {"$match": {"status": {"$in": PAID_REVENUE_STATUSES}, "created_at": {"$gte": last_month_start, "$lt": this_month_start}}},
         {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}},
     ]
     last_month_revenue_result = await db.orders.aggregate(last_month_revenue_pipeline).to_list(length=1)
@@ -99,15 +100,15 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
     active_users_progress = min(round((active_users_curr / 500.0) * 100, 1), 100.0)
 
     # 4. Conversion Rate Trend & Progress (combining Orders from MongoDB and Visitors from GA)
-    successful_orders = await db.orders.count_documents({"status": {"$ne": "CANCELLED"}})
+    successful_orders = await db.orders.count_documents({"status": {"$in": PAID_REVENUE_STATUSES}})
     conversion_rate = round((successful_orders / total_unique_visitors * 100), 2) if total_unique_visitors > 0 else 0.0
 
     this_month_visitors = active_users_curr
-    this_month_orders = await db.orders.count_documents({"status": {"$ne": "CANCELLED"}, "created_at": {"$gte": this_month_start}})
+    this_month_orders = await db.orders.count_documents({"status": {"$in": PAID_REVENUE_STATUSES}, "created_at": {"$gte": this_month_start}})
     this_month_rate = (this_month_orders / this_month_visitors * 100) if this_month_visitors > 0 else 0.0
 
     last_month_visitors = active_users_prev
-    last_month_orders = await db.orders.count_documents({"status": {"$ne": "CANCELLED"}, "created_at": {"$gte": last_month_start, "$lt": this_month_start}})
+    last_month_orders = await db.orders.count_documents({"status": {"$in": PAID_REVENUE_STATUSES}, "created_at": {"$gte": last_month_start, "$lt": this_month_start}})
     last_month_rate = (last_month_orders / last_month_visitors * 100) if last_month_visitors > 0 else 0.0
 
     if last_month_rate > 0:
@@ -120,7 +121,7 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
     # --- CRM Specific Dashboard Data ---
     # 1. Orders Status (Completed, Processing, Cancelled)
     completed_orders = await db.orders.count_documents({"status": "DELIVERED"})
-    processing_orders = await db.orders.count_documents({"status": {"$in": ["PENDING", "CONFIRMED", "SHIPPED", "DISPATCHED", "OUT_FOR_DELIVERY"]}})
+    processing_orders = await db.orders.count_documents({"status": {"$in": ["CONFIRMED", "SHIPPED", "DISPATCHED", "OUT_FOR_DELIVERY"]}})
     cancelled_orders = await db.orders.count_documents({"status": "CANCELLED"})
 
     # 2. Return Requests as Support Tickets (Solved, Open, New)
@@ -137,7 +138,7 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
 
     # 3. Monthly Revenue Trend for Sparkline/AreaChart
     rev_pipeline = [
-        {"$match": {"status": {"$ne": "CANCELLED"}}},
+        {"$match": {"status": {"$in": PAID_REVENUE_STATUSES}}},
         {
             "$group": {
                 "_id": {
@@ -172,7 +173,7 @@ async def get_dashboard_analytics(user=Depends(get_current_user)):
 
     # 4. Visitors and Sales Monthly (stacked bar chart data)
     sales_monthly_pipeline = [
-        {"$match": {"status": {"$ne": "CANCELLED"}}},
+        {"$match": {"status": {"$in": PAID_REVENUE_STATUSES}}},
         {
             "$group": {
                 "_id": {

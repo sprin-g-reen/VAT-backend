@@ -16,7 +16,8 @@ async def get_all_orders(user=Depends(get_current_user)):
     if not any(role in {"admin", "super_admin"} for role in user_roles):
         raise HTTPException(status_code=403, detail="Permission denied")
         
-    orders = await db.orders.find().to_list(length=1000)
+    PAID_STATUSES = ["CONFIRMED", "SHIPPED", "DISPATCHED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]
+    orders = await db.orders.find({"status": {"$in": PAID_STATUSES}}).to_list(length=1000)
     
     # Fetch user details to embed email and name
     # Normalize user_id values: some orders store a full user document, others store the id string
@@ -95,7 +96,8 @@ async def get_all_orders(user=Depends(get_current_user)):
 async def get_all_orders_debug():
     """Temporary debug endpoint: returns orders without authentication.
     Use only for local debugging; remove in production."""
-    orders = await db.orders.find().to_list(length=1000)
+    PAID_STATUSES = ["CONFIRMED", "SHIPPED", "DISPATCHED", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]
+    orders = await db.orders.find({"status": {"$in": PAID_STATUSES}}).to_list(length=1000)
     res = []
     for o in orders:
         items = o.get("items") or []

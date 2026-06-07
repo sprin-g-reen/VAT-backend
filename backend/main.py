@@ -38,6 +38,7 @@ from admin_routes import (
     admin_analytics,
     admin_order,
     admin_review,
+    admin_customer,
 )
 from db import db, verify_mongodb_connection
 from database.base import ErrorResponse, SuccessResponse
@@ -263,6 +264,7 @@ app.include_router(admin_content_controller.router)
 app.include_router(admin_analytics.router)
 app.include_router(admin_order.router)
 app.include_router(admin_review.router)
+app.include_router(admin_customer.router)
 app.include_router(analytics_tracker.router)
 
 

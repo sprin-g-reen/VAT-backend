@@ -44,6 +44,16 @@ async def get_order(order_id: str):
     order = await db.orders.find_one({"_id": order_id})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Retrieve user info to populate customer_name and customer_email
+    uid = order.get("user_id")
+    if isinstance(uid, dict):
+        uid = uid.get("_id")
+    if uid:
+        user = await db.users.find_one({"_id": uid}, {"name": 1, "email": 1})
+        if user:
+            order["customer_name"] = user.get("name") or user.get("email", "Guest").split("@")[0]
+            order["customer_email"] = user.get("email") or ""
     return order
 
 async def update_order_status(order_id: str, data: OrderStatusUpdate):

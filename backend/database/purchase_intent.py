@@ -146,6 +146,8 @@ class OrderOut(AppBaseModel):
 
     address: Optional[AddressEmbedded] = None
     order_created_at: datetime = Field(default_factory=datetime.utcnow)
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
 
 
 class OrderStatusUpdate(AppBaseModel):

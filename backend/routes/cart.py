@@ -117,6 +117,7 @@ async def checkout(
             "amount": amount_in_paise,
             "currency": "INR",
             "receipt": order_id,
+            "payment_capture": 1,
             "notes": {
                 "order_id": order_id,
                 "user_id": current_user_id

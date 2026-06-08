@@ -273,7 +273,7 @@ app.include_router(analytics_tracker.router)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(error=exc.detail).model_dump()
+        content=ErrorResponse(error=exc.detail, detail=exc.detail).model_dump()
     )
 
 

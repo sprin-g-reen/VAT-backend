@@ -40,15 +40,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post("/signup", response_model=SuccessResponse[dict], status_code=201)
 async def signup(data: SignupRequest):
 
-    existing = await db.users.find_one({
-        "$or": [
-            {"email": data.email},
-            {"phone": data.phone}
-        ]
-    }, {"_id": 1})
+    existing_email = await db.users.find_one({"email": data.email}, {"_id": 1})
+    if existing_email:
+        raise HTTPException(status_code=409, detail="Email ID is already registered")
 
-    if existing:
-        raise HTTPException(status_code=409, detail="User already exists")
+    existing_phone = await db.users.find_one({"phone": data.phone}, {"_id": 1})
+    if existing_phone:
+        raise HTTPException(status_code=409, detail="Phone number is already registered")
 
     user_id = await generate_user_id(db)
 

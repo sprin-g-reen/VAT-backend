@@ -183,7 +183,7 @@ app.add_middleware(
     # Only allow VAT's own Vercel preview & production domains.
     # Using '.*\.vercel\.app' would allow ANY Vercel app (including attacker-controlled)
     # to make credentialed requests to this API — a serious CORS misconfiguration.
-    allow_origin_regex=r"https://vat-frontend[\w-]*\.vercel\.app$|https://vat-admin[\w-]*\.vercel\.app$",
+    allow_origin_regex=r"https://vat-frontend[\w-]*\.vercel\.app$|https://vat-admin[\w-]*\.vercel\.app$|https://([\w-]+\.)?vjsindia\.org$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

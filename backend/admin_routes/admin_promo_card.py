@@ -71,17 +71,34 @@ async def upload_promo_image(file: UploadFile = File(...), user=Depends(require_
     filepath = os.path.join(UPLOAD_DIR, filename)
     
     try:
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        if os.path.getsize(filepath) > 5 * 1024 * 1024:
-            os.remove(filepath)
+        # Read file bytes in memory
+        file_bytes = await file.read()
+        
+        # Check size in memory
+        if len(file_bytes) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
+            
+        # Write to local disk (if allowed by OS/container)
+        try:
+            with open(filepath, "wb") as buffer:
+                buffer.write(file_bytes)
+        except OSError:
+            # Continue even if writing to local disk fails (e.g. read-only file system on Vercel)
+            pass
+            
+        # Save to MongoDB for persistent access across serverless functions
+        image_url = f"/static/uploads/promo-cards/{filename}"
+        await db.fs_files.insert_one({
+            "_id": image_url,
+            "filename": filename,
+            "content_type": file.content_type,
+            "data": file_bytes,
+            "uploaded_at": datetime.utcnow()
+        })
             
     except Exception as e:
         if not isinstance(e, HTTPException):
             raise HTTPException(status_code=500, detail=str(e))
         raise e
     
-    image_url = f"/static/uploads/promo-cards/{filename}"
     return {"imageUrl": image_url}

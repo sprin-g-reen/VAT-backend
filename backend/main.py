@@ -3,7 +3,7 @@ import os
 # Add backend directory to path so imports resolve correctly on Vercel
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -236,6 +236,13 @@ async def serve_static(file_path: str):
     local_file = os.path.join("static", file_path)
     if os.path.exists(local_file) and os.path.isfile(local_file):
         return FileResponse(local_file)
+    
+    # Fallback to MongoDB fs_files
+    db_path = f"static/{file_path}".replace("\\", "/")
+    file_doc = await db.fs_files.find_one({"_id": db_path})
+    if file_doc:
+        return Response(content=file_doc["data"], media_type=file_doc["content_type"])
+        
     raise HTTPException(status_code=404, detail="File not found")
 
 
